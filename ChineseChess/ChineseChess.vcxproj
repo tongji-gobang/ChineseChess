@@ -18,6 +18,15 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ChessBoard.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="XQWLIGHT.RC" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="RESOURCE.H" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{1B815E74-DBA8-43E4-AEA9-53294B29DB8A}</ProjectGuid>
@@ -110,8 +119,6 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
