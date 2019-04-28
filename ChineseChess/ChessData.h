@@ -1,15 +1,4 @@
-const LPCSTR cszAbout = "象棋小巫师 0.3\n象棋百科全书 荣誉出品\n\n"
-"(C) 2004-2008 www.xqbase.com\n本产品符合GNU通用公共许可协议\n\n"
-"欢迎登录 www.xqbase.com\n免费下载PC版 象棋巫师";
-
-// 窗口和绘图属性
-const int WINDOW_STYLES = WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX;
-const int MASK_COLOR = RGB(0, 255, 0);
-const int SQUARE_SIZE = 56;
-const int BOARD_EDGE = 8;
-const int BOARD_WIDTH = BOARD_EDGE + SQUARE_SIZE * 9 + BOARD_EDGE;
-const int BOARD_HEIGHT = BOARD_EDGE + SQUARE_SIZE * 10 + BOARD_EDGE;
-
+#include<Windows.h>
 // 棋盘范围
 const int RANK_TOP = 3;
 const int RANK_BOTTOM = 12;
@@ -25,12 +14,7 @@ const int PIECE_ROOK = 4;
 const int PIECE_CANNON = 5;
 const int PIECE_PAWN = 6;
 
-// 其他常数
-const int MAX_GEN_MOVES = 128; // 最大的生成走法数
-const int LIMIT_DEPTH = 32;    // 最大的搜索深度
-const int MATE_VALUE = 10000;  // 最高分值，即将死的分值
-const int WIN_VALUE = MATE_VALUE - 100; // 搜索出胜负的分值界限，超出此值就说明已经搜索出杀棋了
-const int ADVANCED_VALUE = 3;  // 先行权分值
+
 
 							   // 判断棋子是否在棋盘中的数组
 static const char ccInBoard[256] = {

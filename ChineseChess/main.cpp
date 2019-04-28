@@ -1,3 +1,7 @@
+#include"UI.h"
+#include"ChessBoard.h"
+#include"ChessData.h"
+#include"Search.h"
 
 
 // 入口过程
@@ -6,6 +10,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	MSG msg;
 	WNDCLASSEX wce;
 
+
+	
 	// 初始化全局变量
 	Xqwl.hInst = hInstance;
 	Xqwl.bFlipped = FALSE;

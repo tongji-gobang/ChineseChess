@@ -14,135 +14,138 @@
 
 #include"ChessBoard.h"
 #include"ChessData.h"
+#include"Search.h"
 // 版本号
 
+PositionStruct pos;
+
 // 判断棋子是否在棋盘中
-inline BOOL IN_BOARD(int sq) {
+BOOL IN_BOARD(int sq) {
 	return ccInBoard[sq] != 0;
 }
 
 // 判断棋子是否在九宫中
-inline BOOL IN_FORT(int sq) {
+BOOL IN_FORT(int sq) {
 	return ccInFort[sq] != 0;
 }
 
 // 获得格子的横坐标
-inline int RANK_Y(int sq) {
+int RANK_Y(int sq) {
 	return sq >> 4;
 }
 
 // 获得格子的纵坐标
-inline int FILE_X(int sq) {
+int FILE_X(int sq) {
 	return sq & 15;
 }
 
 // 根据纵坐标和横坐标获得格子
-inline int COORD_XY(int x, int y) {
+int COORD_XY(int x, int y) {
 	return x + (y << 4);
 }
 
 // 翻转格子
-inline int SQUARE_FLIP(int sq) {
+int SQUARE_FLIP(int sq) {
 	return 254 - sq;
 }
 
 // 纵坐标水平镜像
-inline int FILE_FLIP(int x) {
+int FILE_FLIP(int x) {
 	return 14 - x;
 }
 
 // 横坐标垂直镜像
-inline int RANK_FLIP(int y) {
+int RANK_FLIP(int y) {
 	return 15 - y;
 }
 
 // 格子水平镜像
-inline int MIRROR_SQUARE(int sq) {
+int MIRROR_SQUARE(int sq) {
 	return COORD_XY(FILE_FLIP(FILE_X(sq)), RANK_Y(sq));
 }
 
 // 格子水平镜像
-inline int SQUARE_FORWARD(int sq, int sd) {
+int SQUARE_FORWARD(int sq, int sd) {
 	return sq - 16 + (sd << 5);
 }
 
 // 走法是否符合帅(将)的步长
-inline BOOL KING_SPAN(int sqSrc, int sqDst) {
+ BOOL KING_SPAN(int sqSrc, int sqDst) {
 	return ccLegalSpan[sqDst - sqSrc + 256] == 1;
 }
 
 // 走法是否符合仕(士)的步长
-inline BOOL ADVISOR_SPAN(int sqSrc, int sqDst) {
+ BOOL ADVISOR_SPAN(int sqSrc, int sqDst) {
 	return ccLegalSpan[sqDst - sqSrc + 256] == 2;
 }
 
 // 走法是否符合相(象)的步长
-inline BOOL BISHOP_SPAN(int sqSrc, int sqDst) {
+ BOOL BISHOP_SPAN(int sqSrc, int sqDst) {
 	return ccLegalSpan[sqDst - sqSrc + 256] == 3;
 }
 
 // 相(象)眼的位置
-inline int BISHOP_PIN(int sqSrc, int sqDst) {
+int BISHOP_PIN(int sqSrc, int sqDst) {
 	return (sqSrc + sqDst) >> 1;
 }
 
 // 马腿的位置
-inline int KNIGHT_PIN(int sqSrc, int sqDst) {
+int KNIGHT_PIN(int sqSrc, int sqDst) {
 	return sqSrc + ccKnightPin[sqDst - sqSrc + 256];
 }
 
 // 是否未过河
-inline BOOL HOME_HALF(int sq, int sd) {
+ BOOL HOME_HALF(int sq, int sd) {
 	return (sq & 0x80) != (sd << 7);
 }
 
 // 是否已过河
-inline BOOL AWAY_HALF(int sq, int sd) {
+ BOOL AWAY_HALF(int sq, int sd) {
 	return (sq & 0x80) == (sd << 7);
 }
 
 // 是否在河的同一边
-inline BOOL SAME_HALF(int sqSrc, int sqDst) {
+ BOOL SAME_HALF(int sqSrc, int sqDst) {
 	return ((sqSrc ^ sqDst) & 0x80) == 0;
 }
 
 // 是否在同一行
-inline BOOL SAME_RANK(int sqSrc, int sqDst) {
+ BOOL SAME_RANK(int sqSrc, int sqDst) {
 	return ((sqSrc ^ sqDst) & 0xf0) == 0;
 }
 
 // 是否在同一列
-inline BOOL SAME_FILE(int sqSrc, int sqDst) {
+ BOOL SAME_FILE(int sqSrc, int sqDst) {
 	return ((sqSrc ^ sqDst) & 0x0f) == 0;
 }
 
 // 获得红黑标记(红子是8，黑子是16)
-inline int SIDE_TAG(int sd) {
+ int SIDE_TAG(int sd) {
 	return 8 + (sd << 3);
 }
 
 // 获得对方红黑标记
-inline int OPP_SIDE_TAG(int sd) {
+int OPP_SIDE_TAG(int sd) {
 	return 16 - (sd << 3);
 }
 
 // 获得走法的起点
-inline int SRC(int mv) {
+ int SRC(int mv) {
 	return mv & 255;
 }
 
 // 获得走法的终点
-inline int DST(int mv) {
+ int DST(int mv) {
 	return mv >> 8;
 }
 
 // 根据起点和终点获得走法
-inline int MOVE(int sqSrc, int sqDst) {
+ int MOVE(int sqSrc, int sqDst) {
 	return sqSrc + sqDst * 256;
 }
 
 // 走法水平镜像
-inline int MIRROR_MOVE(int mv) {
+int MIRROR_MOVE(int mv) {
 	return MOVE(MIRROR_SQUARE(SRC(mv)), MIRROR_SQUARE(DST(mv)));
 }
 
@@ -513,8 +516,46 @@ BOOL PositionStruct::IsMate(void) {
 	return TRUE;
 }
 
-static PositionStruct pos; // 局面实例
+// 交换走子方
+void PositionStruct::ChangeSide(void) {
+	sdPlayer = 1 - sdPlayer;
+}
 
+// 在棋盘上放一枚棋子
+void PositionStruct::AddPiece(int sq, int pc) { 
+	ucpcSquares[sq] = pc;
+	// 红方加分，黑方(注意"cucvlPiecePos"取值要颠倒)减分
+	if (pc < 16) {
+		vlWhite += cucvlPiecePos[pc - 8][sq];
+	}
+	else {
+		vlBlack += cucvlPiecePos[pc - 16][SQUARE_FLIP(sq)];
+	}
+}
+
+// 从棋盘上拿走一枚棋子
+void PositionStruct::DelPiece(int sq, int pc) { 
+	ucpcSquares[sq] = 0;
+	// 红方减分，黑方(注意"cucvlPiecePos"取值要颠倒)加分
+	if (pc < 16) {
+		vlWhite -= cucvlPiecePos[pc - 8][sq];
+	}
+	else {
+		vlBlack -= cucvlPiecePos[pc - 16][SQUARE_FLIP(sq)];
+	}
+}
+
+// 局面评价函数
+int PositionStruct::Evaluate(void) const {      
+	return (sdPlayer == 0 ? vlWhite - vlBlack : vlBlack - vlWhite) + ADVANCED_VALUE;
+}
+
+// 撤消走一步棋
+void PositionStruct::UndoMakeMove(int mv, int pcCaptured) {
+	nDistance--;
+	ChangeSide();
+	UndoMovePiece(mv, pcCaptured);
+}
 
 
 

@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <windows.h>
-
+#pragma comment(lib, "winmm")
 #ifndef RESOURCE_H
 #define RESOURCE_H
 

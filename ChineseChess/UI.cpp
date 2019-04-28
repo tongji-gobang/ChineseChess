@@ -1,8 +1,13 @@
+#include"UI.h"
+#include"RESOURCE.H"
+#include"ChessData.h"
+#include"ChessBoard.h"
+#include"Search.h"
 
 
-
+UI Xqwl;
 // TransparentBlt 的替代函数，用来修正原函数在 Windows 98 下资源泄漏的问题
-static void TransparentBlt2(HDC hdcDest, int nXOriginDest, int nYOriginDest, int nWidthDest, int nHeightDest,
+void TransparentBlt2(HDC hdcDest, int nXOriginDest, int nYOriginDest, int nWidthDest, int nHeightDest,
 	HDC hdcSrc, int nXOriginSrc, int nYOriginSrc, int nWidthSrc, int nHeightSrc, UINT crTransparent) {
 	HDC hImageDC, hMaskDC;
 	HBITMAP hOldImageBMP, hImageBMP, hOldMaskBMP, hMaskBMP;
@@ -43,13 +48,13 @@ static void TransparentBlt2(HDC hdcDest, int nXOriginDest, int nYOriginDest, int
 }
 
 // 绘制透明图片
-inline void DrawTransBmp(HDC hdc, HDC hdcTmp, int xx, int yy, HBITMAP bmp) {
+void DrawTransBmp(HDC hdc, HDC hdcTmp, int xx, int yy, HBITMAP bmp) {
 	SelectObject(hdcTmp, bmp);
 	TransparentBlt2(hdc, xx, yy, SQUARE_SIZE, SQUARE_SIZE, hdcTmp, 0, 0, SQUARE_SIZE, SQUARE_SIZE, MASK_COLOR);
 }
 
 // 绘制棋盘
-static void DrawBoard(HDC hdc) {
+void DrawBoard(HDC hdc) {
 	int x, y, xx, yy, sq, pc;
 	HDC hdcTmp;
 
@@ -82,12 +87,12 @@ static void DrawBoard(HDC hdc) {
 }
 
 // 播放资源声音
-inline void PlayResWav(int nResId) {
+void PlayResWav(int nResId) {
 	PlaySound(MAKEINTRESOURCE(nResId), Xqwl.hInst, SND_ASYNC | SND_NOWAIT | SND_RESOURCE);
 }
 
 // 弹出不带声音的提示框
-static void MessageBoxMute(LPCSTR lpszText) {
+void MessageBoxMute(LPCSTR lpszText) {
 	MSGBOXPARAMS mbp;
 	mbp.cbSize = sizeof(MSGBOXPARAMS);
 	mbp.hwndOwner = Xqwl.hWnd;
@@ -107,11 +112,10 @@ static void MessageBoxMute(LPCSTR lpszText) {
 	}
 }
 
-// "DrawSquare"参数
-const BOOL DRAW_SELECTED = TRUE;
+
 
 // 绘制格子
-static void DrawSquare(int sq, BOOL bSelected = FALSE) {
+void DrawSquare(int sq, BOOL bSelected = FALSE) {
 	int sqFlipped, xx, yy, pc;
 
 	sqFlipped = Xqwl.bFlipped ? SQUARE_FLIP(sq) : sq;
@@ -129,7 +133,7 @@ static void DrawSquare(int sq, BOOL bSelected = FALSE) {
 }
 
 // 电脑回应一步棋
-static void ResponseMove(void) {
+ void ResponseMove(void) {
 	int pcCaptured;
 	// 电脑走一步棋
 	SetCursor((HCURSOR)LoadImage(NULL, IDC_WAIT, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED));
@@ -155,7 +159,7 @@ static void ResponseMove(void) {
 }
 
 // 点击格子事件处理
-static void ClickSquare(int sq) {
+ void ClickSquare(int sq) {
 	int pc, mv;
 	Xqwl.hdc = GetDC(Xqwl.hWnd);
 	Xqwl.hdcTmp = CreateCompatibleDC(Xqwl.hdc);
@@ -207,13 +211,13 @@ static void ClickSquare(int sq) {
 }
 
 // 初始化棋局
-static void Startup(void) {
+void Startup(void) {
 	pos.Startup();
 	Xqwl.sqSelected = Xqwl.mvLast = 0;
 }
 
 // 窗体事件捕捉过程
-static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	int x, y;
 	HDC hdc;
 	RECT rect;
@@ -298,6 +302,6 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 }
 
 // 装入资源图片
-inline HBITMAP LoadResBmp(int nResId) {
+HBITMAP LoadResBmp(int nResId) {
 	return (HBITMAP)LoadImage(Xqwl.hInst, MAKEINTRESOURCE(nResId), IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
 }

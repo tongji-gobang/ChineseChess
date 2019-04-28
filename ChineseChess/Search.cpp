@@ -1,4 +1,9 @@
 #include"Search.h"
+#include"RESOURCE.H"
+#include"ChessBoard.h"
+
+
+S Search;
 
 // "qsort"按历史表排序的比较函数
 static int CompareHistory(const void *lpmv1, const void *lpmv2) {
@@ -63,7 +68,7 @@ static int SearchFull(int vlAlpha, int vlBeta, int nDepth) {
 }
 
 // 迭代加深搜索过程
-static void SearchMain(void) {
+void SearchMain(void) {
 	int i, t, vl;
 
 	// 初始化
