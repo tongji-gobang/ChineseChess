@@ -1,3 +1,7 @@
+#include <stdlib.h>
+#include <time.h>
+#include <windows.h>
+
 #ifndef RESOURCE_H
 #define RESOURCE_H
 

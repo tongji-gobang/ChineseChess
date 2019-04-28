@@ -18,6 +18,15 @@
     <ClCompile Include="ChessBoard.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Search.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="UI.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="XQWLIGHT.RC">
@@ -26,6 +35,18 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RESOURCE.H">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ChessBoard.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="UI.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Search.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ChessData.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

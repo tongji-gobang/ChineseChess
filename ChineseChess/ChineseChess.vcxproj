@@ -20,11 +20,18 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ChessBoard.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Search.cpp" />
+    <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="XQWLIGHT.RC" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ChessBoard.h" />
+    <ClInclude Include="ChessData.h" />
+    <ClInclude Include="Search.h" />
+    <ClInclude Include="UI.h" />
     <ClInclude Include="RESOURCE.H" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
