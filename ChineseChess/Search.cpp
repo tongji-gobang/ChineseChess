@@ -4,7 +4,7 @@
 
 
 S Search;
-
+/*
 // "qsort"按历史表排序的比较函数
 static int CompareHistory(const void *lpmv1, const void *lpmv2) {
 	return Search.nHistoryTable[*(int *)lpmv2] - Search.nHistoryTable[*(int *)lpmv1];
@@ -26,7 +26,7 @@ static int SearchFull(int vlAlpha, int vlBeta, int nDepth) {
 	vlBest = -MATE_VALUE; // 这样可以知道，是否一个走法都没走过(杀棋)
 	mvBest = 0;           // 这样可以知道，是否搜索到了Beta走法或PV走法，以便保存到历史表
 
-						  // 3. 生成全部走法，并根据历史表排序
+	// 3. 生成全部走法，并根据历史表排序
 	nGenMoves = pos.GenerateMoves(mvs);
 	qsort(mvs, nGenMoves, sizeof(int), CompareHistory);
 
@@ -51,7 +51,7 @@ static int SearchFull(int vlAlpha, int vlBeta, int nDepth) {
 		}
 	}
 
-	// 5. 所有走法都搜索完了，把最佳走法(不能是Alpha走法)保存到历史表，返回最佳值
+	// 5. 所有走法都搜索完了，把最佳走法(不能是Alpha走法)保存到历史表，返回最佳值 
 	if (vlBest == -MATE_VALUE) {
 		// 如果是杀棋，就根据杀棋步数给出评价
 		return pos.nDistance - MATE_VALUE;
@@ -89,4 +89,76 @@ void SearchMain(void) {
 		}
 	}
 }
+*/
 
+//比较函数
+int compare(const void* a, const void*b) {
+	return *(int *)a - *(int *)b;
+}
+
+
+int SearchFull(int alpha, int beta, int level)
+{
+	if(level == 0)
+	{
+		return pos.Evaluate();
+	}
+	int vl, vlBest,mvBest,nMove,pcCaptured;
+	int mvs[MAX_GEN_MOVES];
+
+	vlBest = -MATE_VALUE;	//判断是否搜索到杀棋，若返回此结果说明已经搜索到
+	mvBest = 0;				//判断是否找到了beta截断或者能提高vlbest的走法
+
+	nMove = pos.GenerateMoves(mvs);//生成全部走法
+	qsort(mvs, nMove, sizeof(int), compare);//按历史表排序
+
+	for (int i = 0; i < nMove; i++) {
+		if (pos.MakeMove(mvs[i], pcCaptured)) {
+			vl = -SearchFull(-beta, -alpha, level - 1);
+			pos.UndoMakeMove(mvs[i], pcCaptured);
+
+			if (vl >= vlBest) {
+				vlBest = vl;
+				if (vl > beta) {		//beta截断
+					mvBest = mvs[i];	//将此走法放入历史表
+					break;
+				}
+				if (vl > alpha) {		//？pv走法是什么意思
+					mvBest = mvs[i];	//将PV走法放入历史表
+					alpha = vl;
+				}
+			}
+		}
+	}
+
+	if (vlBest == -MATE_VALUE) {	//若找到杀棋
+		return pos.nDistance - MATE_VALUE;	//根据杀棋步数做出评价
+	}
+	if (mvBest != 0) { //如果有PV走法或者beta截断
+		Search.nHistoryTable[mvBest] += level*level;
+		if (pos.nDistance == 0) {
+			Search.mvResult = mvBest;
+		}
+
+	}
+	return mvBest;
+}
+
+void SearchMain() {
+	memset(Search.nHistoryTable, 0, 66536*sizeof(int));//清空历史表
+	pos.nDistance = 0;
+	int val,t;
+
+	t = clock();
+	for (int i = 1; i <= LIMIT_DEPTH; i++) {
+		val = SearchFull(-MATE_VALUE, MATE_VALUE, i);
+		//搜索到杀棋
+		if (val >= WIN_VALUE || val <= -WIN_VALUE) {
+			break;
+		}
+		//超时
+		if (clock() - t >= CLOCKS_PER_SEC) {
+			break;
+		}
+	}
+}
