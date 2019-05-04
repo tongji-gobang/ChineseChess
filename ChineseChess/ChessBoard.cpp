@@ -1,162 +1,360 @@
-/**
-* XiangQi Wizard Light - A Very Simple Chinese Chess Program
-* Designed by Morning Yellow, Version: 0.3, Last Modified: Mar. 2008
-* Copyright (C) 2004-2008 www.xqbase.com
-*
-* ÏóÆåĞ¡Î×Ê¦ 0.3 µÄÄ¿±ê£º
-* Ò»¡¢ÓÃ×ÓÁ¦Î»ÖÃ¼ÛÖµ±íÊµÏÖ¾ÖÃæÆÀ¼Ûº¯Êı£»
-* ¶ş¡¢ÓÃ³¬³ö±ß½ç(Fail-Soft)µÄAlpha-BetaËÑË÷ÈÃµçÄÔ×ßÆå£»
-* Èı¡¢ÓÃµü´ú¼ÓÉî¼¼ÊõÊµÏÖÊ±¼ä¿ØÖÆ£»
-* ËÄ¡¢ÊµÏÖÀúÊ·±íÆô·¢£¬ÓÅ»¯Alpha-BetaËÑË÷µÄĞ§ÂÊ£»
-* Îå¡¢ÊµÏÖÉ±Æå²½ÊıÆÀ¼Û£¬ÄÜÓĞĞ§ËÑË÷É±Æå¡£
-*/
-
-
-#include"ChessBoard.h"
+ï»¿#include"ChessBoard.h"
 #include"ChessData.h"
 #include"Search.h"
-// °æ±¾ºÅ
+
 
 PositionStruct pos;
 
-// ÅĞ¶ÏÆå×ÓÊÇ·ñÔÚÆåÅÌÖĞ
-BOOL IN_BOARD(int sq) {
+
+
+
+// åˆ¤æ–­æ£‹å­æ˜¯å¦åœ¨æ£‹ç›˜ä¸­
+  bool IN_BOARD(int sq) {
 	return ccInBoard[sq] != 0;
 }
 
-// ÅĞ¶ÏÆå×ÓÊÇ·ñÔÚ¾Å¹¬ÖĞ
-BOOL IN_FORT(int sq) {
+// åˆ¤æ–­æ£‹å­æ˜¯å¦åœ¨ä¹å®«ä¸­
+  bool IN_FORT(int sq) {
 	return ccInFort[sq] != 0;
 }
 
-// »ñµÃ¸ñ×ÓµÄºá×ø±ê
-int RANK_Y(int sq) {
+// è·å¾—æ ¼å­çš„æ¨ªåæ ‡
+  int RANK_Y(int sq) {
 	return sq >> 4;
 }
 
-// »ñµÃ¸ñ×ÓµÄ×İ×ø±ê
-int FILE_X(int sq) {
+// è·å¾—æ ¼å­çš„çºµåæ ‡
+  int FILE_X(int sq) {
 	return sq & 15;
 }
 
-// ¸ù¾İ×İ×ø±êºÍºá×ø±ê»ñµÃ¸ñ×Ó
-int COORD_XY(int x, int y) {
+// æ ¹æ®çºµåæ ‡å’Œæ¨ªåæ ‡è·å¾—æ ¼å­
+  int COORD_XY(int x, int y) {
 	return x + (y << 4);
 }
 
-// ·­×ª¸ñ×Ó
-int SQUARE_FLIP(int sq) {
+// ç¿»è½¬æ ¼å­
+  int SQUARE_FLIP(int sq) {
 	return 254 - sq;
 }
 
-// ×İ×ø±êË®Æ½¾µÏñ
-int FILE_FLIP(int x) {
+// çºµåæ ‡æ°´å¹³é•œåƒ
+  int FILE_FLIP(int x) {
 	return 14 - x;
 }
 
-// ºá×ø±ê´¹Ö±¾µÏñ
-int RANK_FLIP(int y) {
+// æ¨ªåæ ‡å‚ç›´é•œåƒ
+  int RANK_FLIP(int y) {
 	return 15 - y;
 }
 
-// ¸ñ×ÓË®Æ½¾µÏñ
-int MIRROR_SQUARE(int sq) {
+// æ ¼å­æ°´å¹³é•œåƒ
+  int MIRROR_SQUARE(int sq) {
 	return COORD_XY(FILE_FLIP(FILE_X(sq)), RANK_Y(sq));
 }
 
-// ¸ñ×ÓË®Æ½¾µÏñ
-int SQUARE_FORWARD(int sq, int sd) {
+// æ ¼å­æ°´å¹³é•œåƒ
+  int SQUARE_FORWARD(int sq, int sd) {
 	return sq - 16 + (sd << 5);
 }
 
-// ×ß·¨ÊÇ·ñ·ûºÏË§(½«)µÄ²½³¤
- BOOL KING_SPAN(int sqSrc, int sqDst) {
+// èµ°æ³•æ˜¯å¦ç¬¦åˆå¸…(å°†)çš„æ­¥é•¿
+  bool KING_SPAN(int sqSrc, int sqDst) {
 	return ccLegalSpan[sqDst - sqSrc + 256] == 1;
 }
 
-// ×ß·¨ÊÇ·ñ·ûºÏÊË(Ê¿)µÄ²½³¤
- BOOL ADVISOR_SPAN(int sqSrc, int sqDst) {
+// èµ°æ³•æ˜¯å¦ç¬¦åˆä»•(å£«)çš„æ­¥é•¿
+  bool ADVISOR_SPAN(int sqSrc, int sqDst) {
 	return ccLegalSpan[sqDst - sqSrc + 256] == 2;
 }
 
-// ×ß·¨ÊÇ·ñ·ûºÏÏà(Ïó)µÄ²½³¤
- BOOL BISHOP_SPAN(int sqSrc, int sqDst) {
+// èµ°æ³•æ˜¯å¦ç¬¦åˆç›¸(è±¡)çš„æ­¥é•¿
+  bool BISHOP_SPAN(int sqSrc, int sqDst) {
 	return ccLegalSpan[sqDst - sqSrc + 256] == 3;
 }
 
-// Ïà(Ïó)ÑÛµÄÎ»ÖÃ
-int BISHOP_PIN(int sqSrc, int sqDst) {
+// ç›¸(è±¡)çœ¼çš„ä½ç½®
+  int BISHOP_PIN(int sqSrc, int sqDst) {
 	return (sqSrc + sqDst) >> 1;
 }
 
-// ÂíÍÈµÄÎ»ÖÃ
-int KNIGHT_PIN(int sqSrc, int sqDst) {
+// é©¬è…¿çš„ä½ç½®
+  int KNIGHT_PIN(int sqSrc, int sqDst) {
 	return sqSrc + ccKnightPin[sqDst - sqSrc + 256];
 }
 
-// ÊÇ·ñÎ´¹ıºÓ
- BOOL HOME_HALF(int sq, int sd) {
+// æ˜¯å¦æœªè¿‡æ²³
+  bool HOME_HALF(int sq, int sd) {
 	return (sq & 0x80) != (sd << 7);
 }
 
-// ÊÇ·ñÒÑ¹ıºÓ
- BOOL AWAY_HALF(int sq, int sd) {
+// æ˜¯å¦å·²è¿‡æ²³
+  bool AWAY_HALF(int sq, int sd) {
 	return (sq & 0x80) == (sd << 7);
 }
 
-// ÊÇ·ñÔÚºÓµÄÍ¬Ò»±ß
- BOOL SAME_HALF(int sqSrc, int sqDst) {
+// æ˜¯å¦åœ¨æ²³çš„åŒä¸€è¾¹
+  bool SAME_HALF(int sqSrc, int sqDst) {
 	return ((sqSrc ^ sqDst) & 0x80) == 0;
 }
 
-// ÊÇ·ñÔÚÍ¬Ò»ĞĞ
- BOOL SAME_RANK(int sqSrc, int sqDst) {
+// æ˜¯å¦åœ¨åŒä¸€è¡Œ
+  bool SAME_RANK(int sqSrc, int sqDst) {
 	return ((sqSrc ^ sqDst) & 0xf0) == 0;
 }
 
-// ÊÇ·ñÔÚÍ¬Ò»ÁĞ
- BOOL SAME_FILE(int sqSrc, int sqDst) {
+// æ˜¯å¦åœ¨åŒä¸€åˆ—
+  bool SAME_FILE(int sqSrc, int sqDst) {
 	return ((sqSrc ^ sqDst) & 0x0f) == 0;
 }
 
-// »ñµÃºìºÚ±ê¼Ç(ºì×ÓÊÇ8£¬ºÚ×ÓÊÇ16)
- int SIDE_TAG(int sd) {
+// è·å¾—çº¢é»‘æ ‡è®°(çº¢å­æ˜¯8ï¼Œé»‘å­æ˜¯16)
+  int SIDE_TAG(int sd) {
 	return 8 + (sd << 3);
 }
 
-// »ñµÃ¶Ô·½ºìºÚ±ê¼Ç
-int OPP_SIDE_TAG(int sd) {
+// è·å¾—å¯¹æ–¹çº¢é»‘æ ‡è®°
+  int OPP_SIDE_TAG(int sd) {
 	return 16 - (sd << 3);
 }
 
-// »ñµÃ×ß·¨µÄÆğµã
- int SRC(int mv) {
+// è·å¾—èµ°æ³•çš„èµ·ç‚¹
+  int SRC(int mv) {
 	return mv & 255;
 }
 
-// »ñµÃ×ß·¨µÄÖÕµã
- int DST(int mv) {
+  int DST(int mv) {
 	return mv >> 8;
 }
 
-// ¸ù¾İÆğµãºÍÖÕµã»ñµÃ×ß·¨
- int MOVE(int sqSrc, int sqDst) {
-	return sqSrc + sqDst * 256;
+// æ ¹æ®èµ·ç‚¹å’Œç»ˆç‚¹è·å¾—èµ°æ³•
+  int MOVE(int sqSrc, int sqDst) {
+	return sqSrc + (sqDst <<8);
 }
 
-// ×ß·¨Ë®Æ½¾µÏñ
-int MIRROR_MOVE(int mv) {
+// èµ°æ³•æ°´å¹³é•œåƒ
+  int MIRROR_MOVE(int mv) {
 	return MOVE(MIRROR_SQUARE(SRC(mv)), MIRROR_SQUARE(DST(mv)));
 }
 
 
 
-// ³õÊ¼»¯ÆåÅÌ
+  // ç”Ÿæˆæ‰€æœ‰èµ°æ³•
+  int PositionStruct::GenerateMoves(int *mvs) const {
+	  int i, j, nGenMoves, nDelta, sqSrc, sqDst;
+	  int pcSelfSide, pcOppSide, pcSrc, pcDst;
+	  // ç”Ÿæˆæ‰€æœ‰èµ°æ³•ï¼Œéœ€è¦ç»è¿‡ä»¥ä¸‹å‡ ä¸ªæ­¥éª¤ï¼š
+
+	  nGenMoves = 0;
+	  pcSelfSide = SIDE_TAG(sdPlayer);
+	  pcOppSide = OPP_SIDE_TAG(sdPlayer);
+	  for (sqSrc = 0; sqSrc < 256; sqSrc++) {
+
+		  // 1. æ‰¾åˆ°ä¸€ä¸ªæœ¬æ–¹æ£‹å­ï¼Œå†åšä»¥ä¸‹åˆ¤æ–­ï¼š
+		  pcSrc = ucpcSquares[sqSrc];
+		  if ((pcSrc & pcSelfSide) == 0) {
+			  continue;
+		  }
+
+		  // 2. æ ¹æ®æ£‹å­ç¡®å®šèµ°æ³•
+		  switch (pcSrc - pcSelfSide) {
+		  case PIECE_KING:
+			  for (i = 0; i < 4; i++) {
+				  sqDst = sqSrc + ccKingDelta[i];
+				  if (!IN_FORT(sqDst)) {
+					  continue;
+				  }
+				  pcDst = ucpcSquares[sqDst];
+				  if ((pcDst & pcSelfSide) == 0) {
+					  mvs[nGenMoves] = MOVE(sqSrc, sqDst);
+					  nGenMoves++;
+				  }
+			  }
+			  break;
+		  case PIECE_ADVISOR:
+			  for (i = 0; i < 4; i++) {
+				  sqDst = sqSrc + ccAdvisorDelta[i];
+				  if (!IN_FORT(sqDst)) {
+					  continue;
+				  }
+				  pcDst = ucpcSquares[sqDst];
+				  if ((pcDst & pcSelfSide) == 0) {
+					  mvs[nGenMoves] = MOVE(sqSrc, sqDst);
+					  nGenMoves++;
+				  }
+			  }
+			  break;
+		  case PIECE_BISHOP:
+			  for (i = 0; i < 4; i++) {
+				  sqDst = sqSrc + ccAdvisorDelta[i];
+				  if (!(IN_BOARD(sqDst) && HOME_HALF(sqDst, sdPlayer) && ucpcSquares[sqDst] == 0)) {
+					  continue;
+				  }
+				  sqDst += ccAdvisorDelta[i];
+				  pcDst = ucpcSquares[sqDst];
+				  if ((pcDst & pcSelfSide) == 0) {
+					  mvs[nGenMoves] = MOVE(sqSrc, sqDst);
+					  nGenMoves++;
+				  }
+			  }
+			  break;
+		  case PIECE_KNIGHT:
+			  for (i = 0; i < 4; i++) {
+				  sqDst = sqSrc + ccKingDelta[i];
+				  if (ucpcSquares[sqDst] != 0) {
+					  continue;
+				  }
+				  for (j = 0; j < 2; j++) {
+					  sqDst = sqSrc + ccKnightDelta[i][j];
+					  if (!IN_BOARD(sqDst)) {
+						  continue;
+					  }
+					  pcDst = ucpcSquares[sqDst];
+					  if ((pcDst & pcSelfSide) == 0) {
+						  mvs[nGenMoves] = MOVE(sqSrc, sqDst);
+						  nGenMoves++;
+					  }
+				  }
+			  }
+			  break;
+		  case PIECE_ROOK:
+			  for (i = 0; i < 4; i++) {
+				  nDelta = ccKingDelta[i];
+				  sqDst = sqSrc + nDelta;
+				  while (IN_BOARD(sqDst)) {
+					  pcDst = ucpcSquares[sqDst];
+					  if (pcDst == 0) {
+						  mvs[nGenMoves] = MOVE(sqSrc, sqDst);
+						  nGenMoves++;
+					  }
+					  else {
+						  if ((pcDst & pcOppSide) != 0) {
+							  mvs[nGenMoves] = MOVE(sqSrc, sqDst);
+							  nGenMoves++;
+						  }
+						  break;
+					  }
+					  sqDst += nDelta;
+				  }
+			  }
+			  break;
+		  case PIECE_CANNON:
+			  for (i = 0; i < 4; i++) {
+				  nDelta = ccKingDelta[i];
+				  sqDst = sqSrc + nDelta;
+				  while (IN_BOARD(sqDst)) {
+					  pcDst = ucpcSquares[sqDst];
+					  if (pcDst == 0) {
+						  mvs[nGenMoves] = MOVE(sqSrc, sqDst);
+						  nGenMoves++;
+					  }
+					  else {
+						  break;
+					  }
+					  sqDst += nDelta;
+				  }
+				  sqDst += nDelta;
+				  while (IN_BOARD(sqDst)) {
+					  pcDst = ucpcSquares[sqDst];
+					  if (pcDst != 0) {
+						  if ((pcDst & pcOppSide) != 0) {
+							  mvs[nGenMoves] = MOVE(sqSrc, sqDst);
+							  nGenMoves++;
+						  }
+						  break;
+					  }
+					  sqDst += nDelta;
+				  }
+			  }
+			  break;
+		  case PIECE_PAWN:
+			  sqDst = SQUARE_FORWARD(sqSrc, sdPlayer);
+			  if (IN_BOARD(sqDst)) {
+				  pcDst = ucpcSquares[sqDst];
+				  if ((pcDst & pcSelfSide) == 0) {
+					  mvs[nGenMoves] = MOVE(sqSrc, sqDst);
+					  nGenMoves++;
+				  }
+			  }
+			  if (AWAY_HALF(sqSrc, sdPlayer)) {
+				  for (nDelta = -1; nDelta <= 1; nDelta += 2) {
+					  sqDst = sqSrc + nDelta;
+					  if (IN_BOARD(sqDst)) {
+						  pcDst = ucpcSquares[sqDst];
+						  if ((pcDst & pcSelfSide) == 0) {
+							  mvs[nGenMoves] = MOVE(sqSrc, sqDst);
+							  nGenMoves++;
+						  }
+					  }
+				  }
+			  }
+			  break;
+		  }
+	  }
+	  return nGenMoves;
+  }
+
+
+
+
+
+
+//!ï¼Ÿ wanring addå’Œdelpieceæ€»æ˜¯æˆå¯¹å‡ºç°ï¼Œè€ƒè™‘æ•´åˆä¸€ä¸‹ï¼Ÿï¼ˆæ€»ä½“å°‘ä¸€æ¬¡åˆ¤æ–­ï¼‰
+
+void PositionStruct::AddPiece(int sq, int pc) { // åœ¨æ£‹ç›˜ä¸Šæ”¾ä¸€æšæ£‹å­
+	ucpcSquares[sq] = pc;
+	// çº¢æ–¹åŠ åˆ†ï¼Œé»‘æ–¹(æ³¨æ„"cucvlPiecePos"å–å€¼è¦é¢ å€’)å‡åˆ†
+	if (pc < 16) {
+		vlWhite += cucvlPiecePos[pc - 8][sq];
+	}
+	else {
+		vlBlack += cucvlPiecePos[pc - 16][SQUARE_FLIP(sq)];
+	}
+}
+void PositionStruct::DelPiece(int sq, int pc) { // ä»æ£‹ç›˜ä¸Šæ‹¿èµ°ä¸€æšæ£‹å­
+	ucpcSquares[sq] = 0;
+	// çº¢æ–¹å‡åˆ†ï¼Œé»‘æ–¹(æ³¨æ„"cucvlPiecePos"å–å€¼è¦é¢ å€’)åŠ åˆ†
+	if (pc < 16) {
+		vlWhite -= cucvlPiecePos[pc - 8][sq];
+	}
+	else {
+		vlBlack -= cucvlPiecePos[pc - 16][SQUARE_FLIP(sq)];
+	}
+}
+
+void PositionStruct::AddDelPiece(int src, int dst, int pc) { // åœ¨æ£‹ç›˜ä¸Šæ”¾ä¸€æšæ£‹å­
+	ucpcSquares[src] = pc;
+	ucpcSquares[dst] = 0;
+	// çº¢æ–¹åŠ åˆ†ï¼Œé»‘æ–¹(æ³¨æ„"cucvlPiecePos"å–å€¼è¦é¢ å€’)å‡åˆ†
+	if (pc < 16) {
+		vlWhite += cucvlPiecePos[pc - 8][src];
+		vlWhite -= cucvlPiecePos[pc - 8][dst];
+	}
+	else {
+		vlBlack += cucvlPiecePos[pc - 16][SQUARE_FLIP(src)];
+		vlBlack -= cucvlPiecePos[pc - 16][SQUARE_FLIP(dst)];
+	}
+}
+
+
+
+int PositionStruct::Evaluate(void) const { // å±€é¢è¯„ä»·å‡½æ•°
+	return (sdPlayer == 0 ? vlWhite - vlBlack : vlBlack - vlWhite) + ADVANCED_VALUE;
+}
+
+
+
+
+
+
+
+
+// åˆå§‹åŒ–æ£‹ç›˜
 void PositionStruct::Startup(void) {
 	int sq, pc;
 	sdPlayer = vlWhite = vlBlack = nDistance = 0;
 	memset(ucpcSquares, 0, 256);
-	for (sq = 0; sq < 256; sq++) {
+	for (sq = 0; sq < 256; ++sq) {
 		pc = cucpcStartup[sq];
 		if (pc != 0) {
 			AddPiece(sq, pc);
@@ -164,7 +362,7 @@ void PositionStruct::Startup(void) {
 	}
 }
 
-// °áÒ»²½ÆåµÄÆå×Ó
+// æ¬ä¸€æ­¥æ£‹çš„æ£‹å­
 int PositionStruct::MovePiece(int mv) {
 	int sqSrc, sqDst, pc, pcCaptured;
 	sqSrc = SRC(mv);
@@ -174,198 +372,38 @@ int PositionStruct::MovePiece(int mv) {
 		DelPiece(sqDst, pcCaptured);
 	}
 	pc = ucpcSquares[sqSrc];
-	DelPiece(sqSrc, pc);
-	AddPiece(sqDst, pc);
+	//DelPiece(sqSrc, pc);
+	//AddPiece(sqDst, pc);
+	AddDelPiece(sqDst, sqSrc, pc);
 	return pcCaptured;
 }
 
-// ³·Ïû°áÒ»²½ÆåµÄÆå×Ó
+// æ’¤æ¶ˆæ¬ä¸€æ­¥æ£‹çš„æ£‹å­
 void PositionStruct::UndoMovePiece(int mv, int pcCaptured) {
 	int sqSrc, sqDst, pc;
 	sqSrc = SRC(mv);
 	sqDst = DST(mv);
 	pc = ucpcSquares[sqDst];
-	DelPiece(sqDst, pc);
-	AddPiece(sqSrc, pc);
+	//DelPiece(sqDst, pc);
+	//AddPiece(sqSrc, pc);
+	AddDelPiece(sqSrc, sqDst, pc);
 	if (pcCaptured != 0) {
 		AddPiece(sqDst, pcCaptured);
 	}
 }
 
-// ×ßÒ»²½Æå
-BOOL PositionStruct::MakeMove(int mv, int &pcCaptured) {
-	pcCaptured = MovePiece(mv);
-	if (Checked()) {
-		UndoMovePiece(mv, pcCaptured);
-		return FALSE;
-	}
-	ChangeSide();
-	nDistance++;
-	return TRUE;
+// äº¤æ¢èµ°å­æ–¹
+void PositionStruct::ChangeSide(void) {
+	sdPlayer = 1 - sdPlayer;
 }
 
-// Éú³ÉËùÓĞ×ß·¨
-int PositionStruct::GenerateMoves(int *mvs) const {
-	int i, j, nGenMoves, nDelta, sqSrc, sqDst;
-	int pcSelfSide, pcOppSide, pcSrc, pcDst;
-	// Éú³ÉËùÓĞ×ß·¨£¬ĞèÒª¾­¹ıÒÔÏÂ¼¸¸ö²½Öè£º
-
-	nGenMoves = 0;
-	pcSelfSide = SIDE_TAG(sdPlayer);
-	pcOppSide = OPP_SIDE_TAG(sdPlayer);
-	for (sqSrc = 0; sqSrc < 256; sqSrc++) {
-
-		// 1. ÕÒµ½Ò»¸ö±¾·½Æå×Ó£¬ÔÙ×öÒÔÏÂÅĞ¶Ï£º
-		pcSrc = ucpcSquares[sqSrc];
-		if ((pcSrc & pcSelfSide) == 0) {
-			continue;
-		}
-
-		// 2. ¸ù¾İÆå×ÓÈ·¶¨×ß·¨
-		switch (pcSrc - pcSelfSide) {
-		case PIECE_KING:
-			for (i = 0; i < 4; i++) {
-				sqDst = sqSrc + ccKingDelta[i];
-				if (!IN_FORT(sqDst)) {
-					continue;
-				}
-				pcDst = ucpcSquares[sqDst];
-				if ((pcDst & pcSelfSide) == 0) {
-					mvs[nGenMoves] = MOVE(sqSrc, sqDst);
-					nGenMoves++;
-				}
-			}
-			break;
-		case PIECE_ADVISOR:
-			for (i = 0; i < 4; i++) {
-				sqDst = sqSrc + ccAdvisorDelta[i];
-				if (!IN_FORT(sqDst)) {
-					continue;
-				}
-				pcDst = ucpcSquares[sqDst];
-				if ((pcDst & pcSelfSide) == 0) {
-					mvs[nGenMoves] = MOVE(sqSrc, sqDst);
-					nGenMoves++;
-				}
-			}
-			break;
-		case PIECE_BISHOP:
-			for (i = 0; i < 4; i++) {
-				sqDst = sqSrc + ccAdvisorDelta[i];
-				if (!(IN_BOARD(sqDst) && HOME_HALF(sqDst, sdPlayer) && ucpcSquares[sqDst] == 0)) {
-					continue;
-				}
-				sqDst += ccAdvisorDelta[i];
-				pcDst = ucpcSquares[sqDst];
-				if ((pcDst & pcSelfSide) == 0) {
-					mvs[nGenMoves] = MOVE(sqSrc, sqDst);
-					nGenMoves++;
-				}
-			}
-			break;
-		case PIECE_KNIGHT:
-			for (i = 0; i < 4; i++) {
-				sqDst = sqSrc + ccKingDelta[i];
-				if (ucpcSquares[sqDst] != 0) {
-					continue;
-				}
-				for (j = 0; j < 2; j++) {
-					sqDst = sqSrc + ccKnightDelta[i][j];
-					if (!IN_BOARD(sqDst)) {
-						continue;
-					}
-					pcDst = ucpcSquares[sqDst];
-					if ((pcDst & pcSelfSide) == 0) {
-						mvs[nGenMoves] = MOVE(sqSrc, sqDst);
-						nGenMoves++;
-					}
-				}
-			}
-			break;
-		case PIECE_ROOK:
-			for (i = 0; i < 4; i++) {
-				nDelta = ccKingDelta[i];
-				sqDst = sqSrc + nDelta;
-				while (IN_BOARD(sqDst)) {
-					pcDst = ucpcSquares[sqDst];
-					if (pcDst == 0) {
-						mvs[nGenMoves] = MOVE(sqSrc, sqDst);
-						nGenMoves++;
-					}
-					else {
-						if ((pcDst & pcOppSide) != 0) {
-							mvs[nGenMoves] = MOVE(sqSrc, sqDst);
-							nGenMoves++;
-						}
-						break;
-					}
-					sqDst += nDelta;
-				}
-			}
-			break;
-		case PIECE_CANNON:
-			for (i = 0; i < 4; i++) {
-				nDelta = ccKingDelta[i];
-				sqDst = sqSrc + nDelta;
-				while (IN_BOARD(sqDst)) {
-					pcDst = ucpcSquares[sqDst];
-					if (pcDst == 0) {
-						mvs[nGenMoves] = MOVE(sqSrc, sqDst);
-						nGenMoves++;
-					}
-					else {
-						break;
-					}
-					sqDst += nDelta;
-				}
-				sqDst += nDelta;
-				while (IN_BOARD(sqDst)) {
-					pcDst = ucpcSquares[sqDst];
-					if (pcDst != 0) {
-						if ((pcDst & pcOppSide) != 0) {
-							mvs[nGenMoves] = MOVE(sqSrc, sqDst);
-							nGenMoves++;
-						}
-						break;
-					}
-					sqDst += nDelta;
-				}
-			}
-			break;
-		case PIECE_PAWN:
-			sqDst = SQUARE_FORWARD(sqSrc, sdPlayer);
-			if (IN_BOARD(sqDst)) {
-				pcDst = ucpcSquares[sqDst];
-				if ((pcDst & pcSelfSide) == 0) {
-					mvs[nGenMoves] = MOVE(sqSrc, sqDst);
-					nGenMoves++;
-				}
-			}
-			if (AWAY_HALF(sqSrc, sdPlayer)) {
-				for (nDelta = -1; nDelta <= 1; nDelta += 2) {
-					sqDst = sqSrc + nDelta;
-					if (IN_BOARD(sqDst)) {
-						pcDst = ucpcSquares[sqDst];
-						if ((pcDst & pcSelfSide) == 0) {
-							mvs[nGenMoves] = MOVE(sqSrc, sqDst);
-							nGenMoves++;
-						}
-					}
-				}
-			}
-			break;
-		}
-	}
-	return nGenMoves;
-}
-
-// ÅĞ¶Ï×ß·¨ÊÇ·ñºÏÀí
-BOOL PositionStruct::LegalMove(int mv) const {
+// åˆ¤æ–­èµ°æ³•æ˜¯å¦åˆç†
+bool PositionStruct::LegalMove(int mv) const {
 	int sqSrc, sqDst, sqPin;
 	int pcSelfSide, pcSrc, pcDst, nDelta;
-	// ÅĞ¶Ï×ß·¨ÊÇ·ñºÏ·¨£¬ĞèÒª¾­¹ıÒÔÏÂµÄÅĞ¶Ï¹ı³Ì£º
+	// åˆ¤æ–­èµ°æ³•æ˜¯å¦åˆæ³•ï¼Œéœ€è¦ç»è¿‡ä»¥ä¸‹çš„åˆ¤æ–­è¿‡ç¨‹ï¼š
 
-	// 1. ÅĞ¶ÏÆğÊ¼¸ñÊÇ·ñÓĞ×Ô¼ºµÄÆå×Ó
+	// 1. åˆ¤æ–­èµ·å§‹æ ¼æ˜¯å¦æœ‰è‡ªå·±çš„æ£‹å­
 	sqSrc = SRC(mv);
 	pcSrc = ucpcSquares[sqSrc];
 	pcSelfSide = SIDE_TAG(sdPlayer);
@@ -373,14 +411,14 @@ BOOL PositionStruct::LegalMove(int mv) const {
 		return FALSE;
 	}
 
-	// 2. ÅĞ¶ÏÄ¿±ê¸ñÊÇ·ñÓĞ×Ô¼ºµÄÆå×Ó
+	// 2. åˆ¤æ–­ç›®æ ‡æ ¼æ˜¯å¦æœ‰è‡ªå·±çš„æ£‹å­
 	sqDst = DST(mv);
 	pcDst = ucpcSquares[sqDst];
 	if ((pcDst & pcSelfSide) != 0) {
 		return FALSE;
 	}
 
-	// 3. ¸ù¾İÆå×ÓµÄÀàĞÍ¼ì²é×ß·¨ÊÇ·ñºÏÀí
+	// 3. æ ¹æ®æ£‹å­çš„ç±»å‹æ£€æŸ¥èµ°æ³•æ˜¯å¦åˆç†
 	switch (pcSrc - pcSelfSide) {
 	case PIECE_KING:
 		return IN_FORT(sqDst) && KING_SPAN(sqSrc, sqDst);
@@ -430,20 +468,40 @@ BOOL PositionStruct::LegalMove(int mv) const {
 	}
 }
 
-// ÅĞ¶ÏÊÇ·ñ±»½«¾ü
-BOOL PositionStruct::Checked() const {
+// èµ°ä¸€æ­¥æ£‹
+bool PositionStruct::MakeMove(int mv, int &pcCaptured) {
+	pcCaptured = MovePiece(mv);
+	if (Checked()) {
+		UndoMovePiece(mv, pcCaptured);
+		return FALSE;
+	}
+	ChangeSide();
+	nDistance++;
+	return TRUE;
+}
+
+void PositionStruct::UndoMakeMove(int mv, int pcCaptured) { // æ’¤æ¶ˆèµ°ä¸€æ­¥æ£‹
+	--nDistance;
+	ChangeSide();
+	UndoMovePiece(mv, pcCaptured);
+}
+
+
+
+// åˆ¤æ–­æ˜¯å¦è¢«å°†å†›
+bool PositionStruct::Checked() const {
 	int i, j, sqSrc, sqDst;
 	int pcSelfSide, pcOppSide, pcDst, nDelta;
 	pcSelfSide = SIDE_TAG(sdPlayer);
 	pcOppSide = OPP_SIDE_TAG(sdPlayer);
-	// ÕÒµ½ÆåÅÌÉÏµÄË§(½«)£¬ÔÙ×öÒÔÏÂÅĞ¶Ï£º
+	// æ‰¾åˆ°æ£‹ç›˜ä¸Šçš„å¸…(å°†)ï¼Œå†åšä»¥ä¸‹åˆ¤æ–­ï¼š
 
 	for (sqSrc = 0; sqSrc < 256; sqSrc++) {
 		if (ucpcSquares[sqSrc] != pcSelfSide + PIECE_KING) {
 			continue;
 		}
 
-		// 1. ÅĞ¶ÏÊÇ·ñ±»¶Ô·½µÄ±ø(×ä)½«¾ü
+		// 1. åˆ¤æ–­æ˜¯å¦è¢«å¯¹æ–¹çš„å…µ(å’)å°†å†›
 		if (ucpcSquares[SQUARE_FORWARD(sqSrc, sdPlayer)] == pcOppSide + PIECE_PAWN) {
 			return TRUE;
 		}
@@ -453,7 +511,7 @@ BOOL PositionStruct::Checked() const {
 			}
 		}
 
-		// 2. ÅĞ¶ÏÊÇ·ñ±»¶Ô·½µÄÂí½«¾ü(ÒÔÊË(Ê¿)µÄ²½³¤µ±×÷ÂíÍÈ)
+		// 2. åˆ¤æ–­æ˜¯å¦è¢«å¯¹æ–¹çš„é©¬å°†å†›(ä»¥ä»•(å£«)çš„æ­¥é•¿å½“ä½œé©¬è…¿)
 		for (i = 0; i < 4; i++) {
 			if (ucpcSquares[sqSrc + ccAdvisorDelta[i]] != 0) {
 				continue;
@@ -466,7 +524,7 @@ BOOL PositionStruct::Checked() const {
 			}
 		}
 
-		// 3. ÅĞ¶ÏÊÇ·ñ±»¶Ô·½µÄ³µ»òÅÚ½«¾ü(°üÀ¨½«Ë§¶ÔÁ³)
+		// 3. åˆ¤æ–­æ˜¯å¦è¢«å¯¹æ–¹çš„è½¦æˆ–ç‚®å°†å†›(åŒ…æ‹¬å°†å¸…å¯¹è„¸)
 		for (i = 0; i < 4; i++) {
 			nDelta = ccKingDelta[i];
 			sqDst = sqSrc + nDelta;
@@ -497,13 +555,15 @@ BOOL PositionStruct::Checked() const {
 	return FALSE;
 }
 
-// ÅĞ¶ÏÊÇ·ñ±»É±
-BOOL PositionStruct::IsMate(void) {
+
+
+// åˆ¤æ–­æ˜¯å¦è¢«æ€
+bool PositionStruct::IsMate(void) {
 	int i, nGenMoveNum, pcCaptured;
 	int mvs[MAX_GEN_MOVES];
 
 	nGenMoveNum = GenerateMoves(mvs);
-	for (i = 0; i < nGenMoveNum; i++) {
+	for (i = 0; i < nGenMoveNum; ++i) {
 		pcCaptured = MovePiece(mvs[i]);
 		if (!Checked()) {
 			UndoMovePiece(mvs[i], pcCaptured);
@@ -515,47 +575,3 @@ BOOL PositionStruct::IsMate(void) {
 	}
 	return TRUE;
 }
-
-// ½»»»×ß×Ó·½
-void PositionStruct::ChangeSide(void) {
-	sdPlayer = 1 - sdPlayer;
-}
-
-// ÔÚÆåÅÌÉÏ·ÅÒ»Ã¶Æå×Ó
-void PositionStruct::AddPiece(int sq, int pc) { 
-	ucpcSquares[sq] = pc;
-	// ºì·½¼Ó·Ö£¬ºÚ·½(×¢Òâ"cucvlPiecePos"È¡ÖµÒªµßµ¹)¼õ·Ö
-	if (pc < 16) {
-		vlWhite += cucvlPiecePos[pc - 8][sq];
-	}
-	else {
-		vlBlack += cucvlPiecePos[pc - 16][SQUARE_FLIP(sq)];
-	}
-}
-
-// ´ÓÆåÅÌÉÏÄÃ×ßÒ»Ã¶Æå×Ó
-void PositionStruct::DelPiece(int sq, int pc) { 
-	ucpcSquares[sq] = 0;
-	// ºì·½¼õ·Ö£¬ºÚ·½(×¢Òâ"cucvlPiecePos"È¡ÖµÒªµßµ¹)¼Ó·Ö
-	if (pc < 16) {
-		vlWhite -= cucvlPiecePos[pc - 8][sq];
-	}
-	else {
-		vlBlack -= cucvlPiecePos[pc - 16][SQUARE_FLIP(sq)];
-	}
-}
-
-// ¾ÖÃæÆÀ¼Ûº¯Êı
-int PositionStruct::Evaluate(void) const {      
-	return (sdPlayer == 0 ? vlWhite - vlBlack : vlBlack - vlWhite) + ADVANCED_VALUE;
-}
-
-// ³·Ïû×ßÒ»²½Æå
-void PositionStruct::UndoMakeMove(int mv, int pcCaptured) {
-	nDistance--;
-	ChangeSide();
-	UndoMovePiece(mv, pcCaptured);
-}
-
-
-
