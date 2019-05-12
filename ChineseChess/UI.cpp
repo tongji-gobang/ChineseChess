@@ -137,9 +137,9 @@ void DrawSquare(int sq, BOOL bSelected = FALSE) {
 	int pcCaptured;
 	// 电脑走一步棋
 	SetCursor((HCURSOR)LoadImage(NULL, IDC_WAIT, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED));
-	SearchMain(1000);
+	SearchMain();
 	SetCursor((HCURSOR)LoadImage(NULL, IDC_ARROW, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED));
-	pos.MakeMove(Search.mvResult);
+	pos.MakeMove(Search.mvResult, pcCaptured);
 	// 清除上一步棋的选择标记
 	DrawSquare(SrcPos(Xqwl.mvLast));
 	DrawSquare(DstPos(Xqwl.mvLast));
@@ -166,7 +166,7 @@ void DrawSquare(int sq, BOOL bSelected = FALSE) {
 	sq = Xqwl.bFlipped ? CorrespondPos(sq) : sq;
 	pc = pos.Board[sq];
 
-	if ((pc & PieceFlag(pos.player)) != 0) {
+	if ((pc & PieceFlag(pos.sdPlayer)) != 0) {
 		// 如果点击自己的子，那么直接选中该子
 		if (Xqwl.sqSelected != 0) {
 			DrawSquare(Xqwl.sqSelected);
@@ -184,7 +184,7 @@ void DrawSquare(int sq, BOOL bSelected = FALSE) {
 		// 如果点击的不是自己的子，但有子选中了(一定是自己的子)，那么走这个子
 		mv = Move(Xqwl.sqSelected, sq);
 		if (pos.LegalMove(mv)) {
-			if (pos.MakeMove(mv)) {
+			if (pos.MakeMove(mv, pc)) {
 				Xqwl.mvLast = mv;
 				DrawSquare(Xqwl.sqSelected, DRAW_SELECTED);
 				DrawSquare(sq, DRAW_SELECTED);

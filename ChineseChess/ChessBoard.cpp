@@ -1,7 +1,6 @@
 ﻿#include"ChessBoard.h"
 #include"ChessData.h"
 #include"Search.h"
-#include <cstring>
 
 
 PositionStruct pos;
@@ -207,116 +206,6 @@ bool PositionStruct::MakeMove(int move) {
   return true;
 }
 
-void PositionStruct::ChangeSide()
-{
-  this->player = 1 - this->player;
-  zobr ^= Zrand.Player;
-}
-
-void PositionStruct::ClearBoard()
-{
-  this->player = 0;
-  this->valueRed = 0;
-  this->valueBlack = 0;
-  this->RootDistance = 0;
-  memset(this->Board, 0, sizeof(this->Board));
-  zobr.InitZero();
-}
-
-void PositionStruct::InitAllMoves()
-{
-  this->AllMoves[0].push(0, 0, Checked(), zobr.dwKey);
-  this->MoveNum = 1;
-}
-
-void PositionStruct::AddPiece(int position, int piece)
-{
-  this->Board[position] = piece;
-
-  if ( piece >= 16 ){
-    this->valueBlack += PiecePosValue[piece - 16][CorrespondPos(position)];
-    zobr ^= Zrand.Table[piece - 9][position];
-  }
-  else {
-    valueRed += PiecePosValue[piece - 8][position];
-    zobr ^= Zrand.Table[piece - 8][position];
-  }
-}
-
-void PositionStruct::DelPiece(int position, int piece)
-{
-  this->Board[position] = 0;
-  if ( piece >= 16 ){
-    this->valueBlack -= PiecePosValue[piece - 16][CorrespondPos(position)];
-    zobr ^= Zrand.Table[piece - 9][position];
-  }
-  else {
-    valueRed -= PiecePosValue[piece - 8][position];
-    zobr ^= Zrand.Table[piece - 8][position];
-  }
-}
-
-int PositionStruct::Evaluate() const
-{
-  return (this->player == 0 ? valueRed - valueBlack : valueBlack - valueRed) + ADVANCED_VALUE;
-}
-
-bool PositionStruct::LastCheck()
-{
-  return this->AllMoves[this->MoveNum - 1].Check;
-}
-
-bool PositionStruct::Captured() const
-{
-  return this->AllMoves[this->MoveNum - 1].pieceCaptured != 0;
-}
-
-void PositionStruct::UndoMakeMove()
-{
-  --this->MoveNum;
-  --this->RootDistance;
-  this->ChangeSide();
-  this->UndoMovePiece(this->AllMoves[this->MoveNum - 1].thisMove, this->AllMoves[this->MoveNum - 1].pieceCaptured);
-}
-
-void PositionStruct::MoveNull()
-{
-  DWORD key;
-  key = this->zobr.dwKey;
-  this->ChangeSide();
-  this->AllMoves[this->MoveNum - 1].push(0, 0, false, key);
-  ++this->MoveNum;
-  ++this->RootDistance;
-}
-
-void PositionStruct::UndoMoveNull()
-{
-  --this->RootDistance;
-  --this->MoveNum;
-  this->ChangeSide();
-}
-
-int PositionStruct::DrawValue()
-{
-  return (this->RootDistance & 1) == 0 ? -DRAW_VALUE : DRAW_VALUE;
-}
-
-int PositionStruct::RepeatValue(int ReNum)
-{
-  int value;
-  if ( (ReNum & 2) == 0 )
-    value = 0;
-  else
-    value = this->RootDistance - BAN_VALUE + ((ReNum & 4) == 0 ? 0 : BAN_VALUE - this->RootDistance);
-
-  return value ? value : this->DrawValue;
-}
-
-bool PositionStruct::NullOkay()
-{
-  return (this->player ? valueBlack : valueRed) > NULL_MARGIN;
-}
-
 // "GenerateMoves"参数
 const bool GEN_CAPTURE = true;
 
@@ -327,8 +216,8 @@ int PositionStruct::GenerateMoves(int *moves, bool OnlyCapture) const {
   // 生成所有走法，需要经过以下几个步骤：
 
   NumGenerate = 0;
-  SelfSide = PieceFlag(this->player);
-  OppSide = OppPieceFlag(this->player);
+  SelfSide = PieceFlag(sdPlayer);
+  OppSide = OppPieceFlag(sdPlayer);
   for (src = 0; src < 256; src ++) {
 
     // 1. 找到一个本方棋子，再做以下判断：
@@ -368,7 +257,7 @@ int PositionStruct::GenerateMoves(int *moves, bool OnlyCapture) const {
     case BISHOP:
       for (i = 0; i < 4; i ++) {
         dst = src + AdvisorStep[i];
-        if (!(InBoard[dst] && !CrossRiver(dst, this->player) && this->Board[dst] == 0)) {
+        if (!(InBoard[dst] && !CrossRiver(dst, sdPlayer) && this->Board[dst] == 0)) {
           continue;
         }
         dst += AdvisorStep[i];
@@ -451,7 +340,7 @@ int PositionStruct::GenerateMoves(int *moves, bool OnlyCapture) const {
       }
       break;
     case PAWN:
-      dst = NextPosCol(src, this->player);
+      dst = NextPosCol(src, sdPlayer);
       if (InBoard[dst]) {
         pieceDst = this->Board[dst];
         if (OnlyCapture ? (pieceDst & OppSide) != 0 : (pieceDst & SelfSide) == 0) {
@@ -459,7 +348,7 @@ int PositionStruct::GenerateMoves(int *moves, bool OnlyCapture) const {
           NumGenerate ++;
         }
       }
-      if (!CrossRiver(src, this->player)) {
+      if (!CrossRiver(src, sdPlayer)) {
         for (delta = -1; delta <= 1; delta += 2) {
           dst = src + delta;
           if (InBoard[dst]) {
@@ -487,7 +376,7 @@ bool PositionStruct::LegalMove(int mv) const
   // 1. 判断起始格是否有自己的棋子
   src = SrcPos(mv);
   pieceSrc = this->Board[src];
-  SelfSide = PieceFlag(this->player);
+  SelfSide = PieceFlag(sdPlayer);
   if ((pieceSrc & SelfSide) == 0) {
     return false;
   }
@@ -536,10 +425,10 @@ bool PositionStruct::LegalMove(int mv) const
       return false;
     }
   case PAWN:
-    if (CrossRiver(dst, this->player) && (dst == src - 1 || dst == src + 1)) {
+    if (CrossRiver(dst, sdPlayer) && (dst == src - 1 || dst == src + 1)) {
       return true;
     }
-    return dst == NextPosCol(src, this->player);
+    return dst == NextPosCol(src, sdPlayer);
   default:
     return false;
   }
@@ -549,8 +438,8 @@ bool PositionStruct::LegalMove(int mv) const
 bool PositionStruct::Checked() const {
   int i, j, src, dst;
   int SelfSide, OppSide, pieceDst, delta;
-  SelfSide = PieceFlag(this->player);
-  OppSide = OppPieceFlag(this->player);
+  SelfSide = PieceFlag(sdPlayer);
+  OppSide = OppPieceFlag(sdPlayer);
   // 找到棋盘上的帅(将)，再做以下判断：
 
   for (src = 0; src < 256; src ++) {
@@ -559,7 +448,7 @@ bool PositionStruct::Checked() const {
     }
 
     // 1. 判断是否被对方的兵(卒)将军
-    if (this->Board[NextPosCol(src, this->player)] == OppSide + PAWN) {
+    if (this->Board[NextPosCol(src, sdPlayer)] == OppSide + PAWN) {
       return TRUE;
     }
     for (delta = -1; delta <= 1; delta += 2) {
@@ -629,6 +518,7 @@ bool PositionStruct::IsMate() {
   }
   return TRUE;
 }
+
 
 // 检测重复局面
 int PositionStruct::IsRepetitive(int ReLoop)
