@@ -33,6 +33,9 @@
     <ClCompile Include="Zobrist.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Ucci.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="XQWLIGHT.RC">
@@ -59,6 +62,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Zobrist.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Ucci.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

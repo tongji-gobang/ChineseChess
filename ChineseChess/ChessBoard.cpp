@@ -213,7 +213,7 @@ void PositionStruct::UndoMakeMove()
     --this->MoveNum;
     --this->RootDistance;
     this->ChangeSide();
-    this->UndoMovePiece(this->AllMoves[this->MoveNum - 1].thisMove, this->AllMoves[this->MoveNum - 1].pieceCaptured);
+    this->UndoMovePiece(this->AllMoves[this->MoveNum].thisMove, this->AllMoves[this->MoveNum].pieceCaptured);
 }
 
 void PositionStruct::ChangeSide()
