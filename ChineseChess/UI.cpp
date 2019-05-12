@@ -179,55 +179,74 @@ static void ResponseMove(void) {
 }
 
 // 点击格子事件处理
- void ClickSquare(int sq) {
-	int pc, mv;
-	Xqwl.hdc = GetDC(Xqwl.hWnd);
-	Xqwl.hdcTmp = CreateCompatibleDC(Xqwl.hdc);
-	sq = Xqwl.bFlipped ? CorrespondPos(sq) : sq;
-	pc = pos.Board[sq];
+static void ClickSquare(int sq) {
+    int pc, mv, vlRep;
+    Xqwl.hdc = GetDC(Xqwl.hWnd);
+    Xqwl.hdcTmp = CreateCompatibleDC(Xqwl.hdc);
+    sq = Xqwl.bFlipped ? CorrespondPos(sq) : sq;
+    pc = pos.Board[sq];
 
-	if ((pc & PieceFlag(pos.player)) != 0) {
-		// 如果点击自己的子，那么直接选中该子
-		if (Xqwl.sqSelected != 0) {
-			DrawSquare(Xqwl.sqSelected);
-		}
-		Xqwl.sqSelected = sq;
-		DrawSquare(sq, DRAW_SELECTED);
-		if (Xqwl.mvLast != 0) {
-			DrawSquare(SrcPos(Xqwl.mvLast));
-			DrawSquare(DstPos(Xqwl.mvLast));
-		}
-		PlayResWav(IDR_CLICK); // 播放点击的声音
+    if ((pc & PieceFlag(pos.player)) != 0) {
+        // 如果点击自己的子，那么直接选中该子
+        if (Xqwl.sqSelected != 0) {
+            DrawSquare(Xqwl.sqSelected);
+        }
+        Xqwl.sqSelected = sq;
+        DrawSquare(sq, DRAW_SELECTED);
+        if (Xqwl.mvLast != 0) {
+            DrawSquare(SrcPos(Xqwl.mvLast));
+            DrawSquare(DstPos(Xqwl.mvLast));
+        }
+        PlayResWav(IDR_CLICK); // 播放点击的声音
 
-	}
-	else if (Xqwl.sqSelected != 0) {
-		// 如果点击的不是自己的子，但有子选中了(一定是自己的子)，那么走这个子
-		mv = Move(Xqwl.sqSelected, sq);
-		if (pos.LegalMove(mv)) {
-			if (pos.MakeMove(mv)) {
-				Xqwl.mvLast = mv;
-				DrawSquare(Xqwl.sqSelected, DRAW_SELECTED);
-				DrawSquare(sq, DRAW_SELECTED);
-				Xqwl.sqSelected = 0;
-				if (pos.IsMate()) {
-					// 如果分出胜负，那么播放胜负的声音，并且弹出不带声音的提示框
-					PlayResWav(IDR_WIN);
-					MessageBoxMute("祝贺你取得胜利！");
-				}
-				else {
-					// 如果没有分出胜负，那么播放将军、吃子或一般走子的声音
-					PlayResWav(pos.Checked() ? IDR_CHECK : pc != 0 ? IDR_CAPTURE : IDR_MOVE);
-					ResponseMove(); // 轮到电脑走棋
-				}
-			}
-			else {
-				PlayResWav(IDR_ILLEGAL); // 播放被将军的声音
-			}
-		}
-		// 如果根本就不符合走法(例如马不走日字)，那么程序不予理会
-	}
-	DeleteDC(Xqwl.hdcTmp);
-	ReleaseDC(Xqwl.hWnd, Xqwl.hdc);
+    }
+    else if (Xqwl.sqSelected != 0 && !Xqwl.bGameOver) {
+        // 如果点击的不是自己的子，但有子选中了(一定是自己的子)，那么走这个子
+        mv = Move(Xqwl.sqSelected, sq);
+        if (pos.LegalMove(mv)) {
+            if (pos.MakeMove(mv)) {
+                Xqwl.mvLast = mv;
+                DrawSquare(Xqwl.sqSelected, DRAW_SELECTED);
+                DrawSquare(sq, DRAW_SELECTED);
+                Xqwl.sqSelected = 0;
+                // 检查重复局面
+                vlRep = pos.IsRepetitive(3);
+                if (pos.IsMate()) {
+                    // 如果分出胜负，那么播放胜负的声音，并且弹出不带声音的提示框
+                    PlayResWav(IDR_WIN);
+                    MessageBoxMute("祝贺你取得胜利！");
+                    Xqwl.bGameOver = TRUE;
+                }
+                else if (vlRep > 0) {
+                    vlRep = pos.RepeatValue(vlRep);
+                    // 注意："vlRep"是对电脑来说的分值
+                    PlayResWav(vlRep > WIN_VALUE ? IDR_LOSS : vlRep < -WIN_VALUE ? IDR_WIN : IDR_DRAW);
+                    MessageBoxMute(vlRep > WIN_VALUE ? "长打作负，请不要气馁！" :
+                        vlRep < -WIN_VALUE ? "电脑长打作负，祝贺你取得胜利！" : "双方不变作和，辛苦了！");
+                    Xqwl.bGameOver = TRUE;
+                }
+                else if (pos.MoveNum > 100) {
+                    PlayResWav(IDR_DRAW);
+                    MessageBoxMute("超过自然限着作和，辛苦了！");
+                    Xqwl.bGameOver = TRUE;
+                }
+                else {
+                    // 如果没有分出胜负，那么播放将军、吃子或一般走子的声音
+                    PlayResWav(pos.LastCheck() ? IDR_CHECK : pos.Captured() ? IDR_CAPTURE : IDR_MOVE);
+                    if (pos.Captured()) {
+                        pos.InitAllMoves();
+                    }
+                    ResponseMove(); // 轮到电脑走棋
+                }
+            }
+            else {
+                PlayResWav(IDR_ILLEGAL); // 播放被将军的声音
+            }
+        }
+        // 如果根本就不符合走法(例如马不走日字)，那么程序不予理会
+    }
+    DeleteDC(Xqwl.hdcTmp);
+    ReleaseDC(Xqwl.hWnd, Xqwl.hdc);
 }
 
 // 初始化棋局
