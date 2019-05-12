@@ -63,7 +63,7 @@ int SortStruct::Next(void) {
 
 //历史表比较函数
 int compare(const void* a, const void*b) {
-	return *(int *)a - *(int *)b;
+	return Search.nHistoryTable[*(int *)b] - Search.nHistoryTable[*(int *)a];
 }
 
 
@@ -76,7 +76,7 @@ void SortStruct::Init(int mvHash_) {
 
 //获取下一个走法
 int SortStruct::Next() {
-	//int mv;
+	int mv;
 
 	//若状态为取散列表走法
 	if (nPhase == PHASE_HASH) {
@@ -101,7 +101,7 @@ int SortStruct::Next() {
 
 		if (mvKiller2&&mvKiller2 != mvHash&& pos.LegalMove(mvKiller2))	//判断杀手2走法是否为0且与散列表走法不同
 																		//且为合法走法
-			return mvKiller1;											//返回杀手2走法
+			return mvKiller2;											//返回杀手2走法
 	}
 
 
@@ -118,9 +118,11 @@ int SortStruct::Next() {
 	//若状态为逐一获取走法状态
 	if (nPhase == PHASE_REST) {
 		while(nIndex < nGenMoves) {										//若采用走法下标小于生成的总走法数
-			if(mvs[nIndex] != mvHash&&mvs[nIndex]!=mvKiller1&&mvs[nIndex]!=mvKiller2)//若此走法不是散列表走法或杀手走法
-				return mvs[nIndex];										//返回此走法
-			nIndex++;													//将采用走法的下标加一
+			mv = mvs[nIndex];
+			nIndex++; 											//将采用走法的下标加一
+			if(mv != mvHash && mv!=mvKiller1 && mv !=mvKiller2)//若此走法不是散列表走法或杀手走法
+				return mv;										//返回此走法
+			
 		}
 	}
 

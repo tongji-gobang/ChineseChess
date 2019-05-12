@@ -120,8 +120,8 @@ void DrawSquare(int sq, BOOL bSelected = FALSE) {
 	int sqFlipped, xx, yy, pc;
 
 	sqFlipped = Xqwl.bFlipped ? CorrespondPos(sq) : sq;
-	xx = BOARD_EDGE + (MirrorCol(sqFlipped) - FILE_LEFT) * SQUARE_SIZE;
-	yy = BOARD_EDGE + (MirrorRow(sqFlipped) - RANK_TOP) * SQUARE_SIZE;
+	xx = BOARD_EDGE + (Column(sqFlipped) - FILE_LEFT) * SQUARE_SIZE;
+	yy = BOARD_EDGE + (Row(sqFlipped) - RANK_TOP) * SQUARE_SIZE;
 	SelectObject(Xqwl.hdcTmp, Xqwl.bmpBoard);
 	BitBlt(Xqwl.hdc, xx, yy, SQUARE_SIZE, SQUARE_SIZE, Xqwl.hdcTmp, xx, yy, SRCCOPY);
 	pc = pos.Board[sq];

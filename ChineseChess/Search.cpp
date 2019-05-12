@@ -291,7 +291,38 @@ int SearchFull(int vlalpha, int vlbeta, int depth, bool NoNull) {
 	return vl_best;
 }
 
+// 根节点的Alpha-Beta搜索过程
+static int SearchRoot(int nDepth) {
+  int vl, vlBest, mv, nNewDepth;
+  SortStruct Sort;
 
+  vlBest = -MATE_VALUE;
+  Sort.Init(Search.mvResult);
+  while ((mv = Sort.Next()) != 0) {
+    if (pos.MakeMove(mv)) {
+      nNewDepth = pos.LastCheck() ? nDepth : nDepth - 1;
+      if (vlBest == -MATE_VALUE) {
+        vl = -SearchFull(-MATE_VALUE, MATE_VALUE, nNewDepth, NO_NULL);
+      } else {
+        vl = -SearchFull(-vlBest - 1, -vlBest, nNewDepth);
+        if (vl > vlBest) {
+          vl = -SearchFull(-MATE_VALUE, -vlBest, nNewDepth, NO_NULL);
+        }
+      }
+      pos.UndoMakeMove();
+      if (vl > vlBest) {
+        vlBest = vl;
+        Search.mvResult = mv;
+        if (vlBest > -WIN_VALUE && vlBest < WIN_VALUE) {
+          vlBest += (rand() & RANDOM_MASK) - (rand() & RANDOM_MASK);
+        }
+      }
+    }
+  }
+  RecordHash(HASH_PV, vlBest, nDepth, Search.mvResult);
+  SetBestMove(Search.mvResult, nDepth);
+  return vlBest;
+}
 
 // 搜索的顶层调用
 void SearchMain(clock_t time_limit) {
@@ -322,8 +353,7 @@ void SearchMain(clock_t time_limit) {
 
 	// 迭代加深过程
 	for (i = 1; i <= LIMIT_DEPTH; i++) {
-		//vl = SearchRoot(i);
-		!SearchFull(-MATE_VALUE, MATE_VALUE,  i,  FALSE);
+		vl = SearchRoot(i);
 		// 搜索到杀棋，就终止搜索
 		if (vl > WIN_VALUE || vl < -WIN_VALUE) {
 			break; // ! 杀棋都是 nDistance - 	VALUE_MATE
