@@ -91,74 +91,77 @@ void SearchMain(void) {
 }
 */
 
-//比较函数
-int compare(const void* a, const void*b) {
-	return *(int *)a - *(int *)b;
-}
 
 
-int SearchFull(int alpha, int beta, int level)
-{
-	if(level == 0)
-	{
-		return pos.Evaluate();
+
+
+int ProbeHash(int vl_Alpha, int vl_Beta, int Depth, int &mv) {
+	bool  bMate; // 杀棋标志
+				 //通过 [ dwKey % HASH_SIZE ] 得到具体走法
+				 // 可以通过指针优化hsh
+	HashItem hsh = Search.HashTable[pos.zobr.dwKey & HASH_SIZE_end];
+	//
+	if (hsh.Lock0 != pos.zobr.dwLock0 || hsh.Lock1 != pos.zobr.dwLock1) {		//如果检验码不同，则跳出
+		mv = 0;
+		return MATE_VALUE_neg;
 	}
-	int vl, vlBest,mvBest,nMove,pcCaptured;
-	int mvs[MAX_GEN_MOVES];
 
-	vlBest = -MATE_VALUE;	//判断是否搜索到杀棋，若返回此结果说明已经搜索到
-	mvBest = 0;				//判断是否找到了beta截断或者能提高vlbest的走法
+	mv = hsh.mv;
+	bMate = FALSE;						//默认未搜索到杀棋
 
-	nMove = pos.GenerateMoves(mvs);//生成全部走法
-	qsort(mvs, nMove, sizeof(int), compare);//按历史表排序
+										//[win_value,Ban_value],则为存在杀棋但长将；
+	if (hsh.vl > WIN_VALUE) {
+		if (hsh.vl < BAN_VALUE)			//低于长将判负的分值则不写入置换表
+			return MATE_VALUE_neg;			// 可能导致搜索的不稳定性，立刻退出，但最佳着法可能拿到
+		hsh.vl -= pos.nDistance;		//>Ban_value 杀棋且不长将
+		bMate = TRUE;
+	}
+	else if (hsh.vl < -WIN_VALUE) {
+		if (hsh.vl > -BAN_VALUE) {
+			return MATE_VALUE_neg;     //负数类似
+		}
+		hsh.vl += pos.nDistance;
+		bMate = TRUE;
+	}
 
-	for (int i = 0; i < nMove; i++) {
-		if (pos.MakeMove(mvs[i], pcCaptured)) {
-			vl = -SearchFull(-beta, -alpha, level - 1);
-			pos.UndoMakeMove(mvs[i], pcCaptured);
-
-			if (vl >= vlBest) {
-				vlBest = vl;
-				if (vl > beta) {		//beta截断
-					mvBest = mvs[i];	//将此走法放入历史表
-					break;
-				}
-				if (vl > alpha) {		//？pv走法是什么意思
-					mvBest = mvs[i];	//将PV走法放入历史表
-					alpha = vl;
-				}
-			}
+	if (hsh.Depth >= Depth || bMate) {			//满足深度限制或者为杀棋（如果是杀棋，那么不需要满足深度条件）
+		switch (hsh.Flag)
+		{
+		case HASH_BETA:		return (hsh.vl >= vl_Beta ? hsh.vl : MATE_VALUE_neg); break;
+		case HASH_ALPHA:	return (hsh.vl <= vl_Alpha ? hsh.vl : MATE_VALUE_neg); break;
+		default:			return hsh.vl; break;
 		}
 	}
 
-	if (vlBest == -MATE_VALUE) {	//若找到杀棋
-		return pos.nDistance - MATE_VALUE;	//根据杀棋步数做出评价
-	}
-	if (mvBest != 0) { //如果有PV走法或者beta截断
-		Search.nHistoryTable[mvBest] += level*level;
-		if (pos.nDistance == 0) {
-			Search.mvResult = mvBest;
-		}
+	return MATE_VALUE_neg;
+};
 
-	}
-	return mvBest;
-}
 
-void SearchMain() {
-	memset(Search.nHistoryTable, 0, 66536*sizeof(int));//清空历史表
-	pos.nDistance = 0;
-	int val,t;
 
-	t = clock();
-	for (int i = 1; i <= LIMIT_DEPTH; i++) {
-		val = SearchFull(-MATE_VALUE, MATE_VALUE, i);
-		//搜索到杀棋
-		if (val >= WIN_VALUE || val <= -WIN_VALUE) {
-			break;
-		}
-		//超时
-		if (clock() - t >= CLOCKS_PER_SEC) {
-			break;
-		}
+// 保存置换表项
+void RecordHash(int Flag, int vl, int Depth, int mv) {
+	// 可以通过指针优化hsh
+	HashItem hsh = Search.HashTable[pos.zobr.dwKey & HASH_SIZE_end];
+	if (hsh.Depth > Depth) {
+		return;
 	}
-}
+
+	if (vl > WIN_VALUE) {
+		if (mv == 0 && vl <= BAN_VALUE) {		// 可能导致搜索的不稳定性，并且没有最佳着法，立刻退出
+			return;
+		}
+		hsh.vl = vl + pos.nDistance;			//>Ban_value 杀棋且不长将
+	}
+	else if (vl < -WIN_VALUE) {					// 同上
+		if (mv == 0 && vl >= -BAN_VALUE) {
+			return;
+		}
+		hsh.vl = vl - pos.nDistance;
+	}
+	else {
+		hsh.vl = vl;
+	}
+
+	Search.HashTable[pos.zobr.dwKey & HASH_SIZE_end] = { Depth,Flag,hsh.vl,mv,pos.zobr.dwLock0,pos.zobr.dwLock1 };
+};
+

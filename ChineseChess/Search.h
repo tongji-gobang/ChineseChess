@@ -21,7 +21,7 @@ const int HASH_PV = 3;         // PV节点的置换表项
 							   // 增加的
 const int HASH_SIZE_end = HASH_SIZE - 1;		// 20位的1
 #define HistoryTable_SIZE 65536
-
+const int MATE_VALUE_neg = -MATE_VALUE;
 
 // 置换表项结构
 /*

@@ -45,7 +45,7 @@ struct PositionStruct
 
 	void AddPiece(int pos, int piece); // 给棋盘上添加棋子
 	void DelPiece(int pos, int piece); // 删除棋盘上的棋子
-	void AddDelPiece(int src, int dst, int piece);
+	void AddDelPiece(int src, int dst, int piece);	
 	int Evaluate() const;							 // 局面评价函数
 	int MovePiece(int move);						 // 搬一步棋的棋子
 	void UndoMovePiece(int move, int PieceCaptured); // 撤消搬一步棋的棋子
