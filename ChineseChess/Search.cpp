@@ -323,7 +323,7 @@ void SearchMain(clock_t time_limit) {
 	// 迭代加深过程
 	for (i = 1; i <= LIMIT_DEPTH; i++) {
 		//vl = SearchRoot(i);
-		// ! SearchFull(-MATE_VALUE, MATE_VALUE,  i,  NoNull = FALSE);
+		!SearchFull(-MATE_VALUE, MATE_VALUE,  i,  FALSE);
 		// 搜索到杀棋，就终止搜索
 		if (vl > WIN_VALUE || vl < -WIN_VALUE) {
 			break; // ! 杀棋都是 nDistance - 	VALUE_MATE
