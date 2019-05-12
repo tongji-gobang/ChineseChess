@@ -51,7 +51,7 @@ public:
 	int Evaluate() const;							 // 局面评价函数
 	int MovePiece(int move);						 // 搬一步棋的棋子
 	void UndoMovePiece(int move, int pieceCaptured); // 撤消搬一步棋的棋子
-	bool MakeMove(int move);	 // 走一步棋
+	bool MakeMove(int move, bool change = true);	 // 走一步棋
 	void UndoMakeMove();  // 撤消走一步棋
 	int GenerateMoves(int *moves, bool OnlyCapture = false) const;			 // 生成所有走法
 	bool LegalMove(int move) const;					 // 判断走法是否合理

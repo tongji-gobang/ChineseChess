@@ -190,7 +190,7 @@ void PositionStruct::UndoMovePiece(int move, int pieceCaptured) {
 }
 
 // 走一步棋
-bool PositionStruct::MakeMove(int move) {
+bool PositionStruct::MakeMove(int move, bool change) {
     int pieceCaptured;
     DWORD dwKey;
 
@@ -200,7 +200,8 @@ bool PositionStruct::MakeMove(int move) {
         UndoMovePiece(move, pieceCaptured);
         return false;
     }
-    ChangeSide();
+    if ( change )
+        this->ChangeSide();
     this->AllMoves[this->MoveNum].push(move, pieceCaptured, Checked(), dwKey);
     this->MoveNum++;
     this->RootDistance++;
