@@ -327,8 +327,8 @@ int PositionStruct::GenerateMoves(int *moves, bool OnlyCapture) const {
   // 生成所有走法，需要经过以下几个步骤：
 
   NumGenerate = 0;
-  SelfSide = PieceFlag(sdPlayer);
-  OppSide = OppPieceFlag(sdPlayer);
+  SelfSide = PieceFlag(this->player);
+  OppSide = OppPieceFlag(this->player);
   for (src = 0; src < 256; src ++) {
 
     // 1. 找到一个本方棋子，再做以下判断：
@@ -368,7 +368,7 @@ int PositionStruct::GenerateMoves(int *moves, bool OnlyCapture) const {
     case BISHOP:
       for (i = 0; i < 4; i ++) {
         dst = src + AdvisorStep[i];
-        if (!(InBoard[dst] && !CrossRiver(dst, sdPlayer) && this->Board[dst] == 0)) {
+        if (!(InBoard[dst] && !CrossRiver(dst, this->player) && this->Board[dst] == 0)) {
           continue;
         }
         dst += AdvisorStep[i];
@@ -451,7 +451,7 @@ int PositionStruct::GenerateMoves(int *moves, bool OnlyCapture) const {
       }
       break;
     case PAWN:
-      dst = NextPosCol(src, sdPlayer);
+      dst = NextPosCol(src, this->player);
       if (InBoard[dst]) {
         pieceDst = this->Board[dst];
         if (OnlyCapture ? (pieceDst & OppSide) != 0 : (pieceDst & SelfSide) == 0) {
@@ -459,7 +459,7 @@ int PositionStruct::GenerateMoves(int *moves, bool OnlyCapture) const {
           NumGenerate ++;
         }
       }
-      if (!CrossRiver(src, sdPlayer)) {
+      if (!CrossRiver(src, this->player)) {
         for (delta = -1; delta <= 1; delta += 2) {
           dst = src + delta;
           if (InBoard[dst]) {
@@ -487,7 +487,7 @@ bool PositionStruct::LegalMove(int mv) const
   // 1. 判断起始格是否有自己的棋子
   src = SrcPos(mv);
   pieceSrc = this->Board[src];
-  SelfSide = PieceFlag(sdPlayer);
+  SelfSide = PieceFlag(this->player);
   if ((pieceSrc & SelfSide) == 0) {
     return false;
   }
@@ -536,10 +536,10 @@ bool PositionStruct::LegalMove(int mv) const
       return false;
     }
   case PAWN:
-    if (CrossRiver(dst, sdPlayer) && (dst == src - 1 || dst == src + 1)) {
+    if (CrossRiver(dst, this->player) && (dst == src - 1 || dst == src + 1)) {
       return true;
     }
-    return dst == NextPosCol(src, sdPlayer);
+    return dst == NextPosCol(src, this->player);
   default:
     return false;
   }
@@ -549,8 +549,8 @@ bool PositionStruct::LegalMove(int mv) const
 bool PositionStruct::Checked() const {
   int i, j, src, dst;
   int SelfSide, OppSide, pieceDst, delta;
-  SelfSide = PieceFlag(sdPlayer);
-  OppSide = OppPieceFlag(sdPlayer);
+  SelfSide = PieceFlag(this->player);
+  OppSide = OppPieceFlag(this->player);
   // 找到棋盘上的帅(将)，再做以下判断：
 
   for (src = 0; src < 256; src ++) {
@@ -559,7 +559,7 @@ bool PositionStruct::Checked() const {
     }
 
     // 1. 判断是否被对方的兵(卒)将军
-    if (this->Board[NextPosCol(src, sdPlayer)] == OppSide + PAWN) {
+    if (this->Board[NextPosCol(src, this->player)] == OppSide + PAWN) {
       return TRUE;
     }
     for (delta = -1; delta <= 1; delta += 2) {
