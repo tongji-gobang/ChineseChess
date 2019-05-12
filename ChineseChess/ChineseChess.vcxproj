@@ -22,7 +22,9 @@
     <ClCompile Include="ChessBoard.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Search.cpp" />
+    <ClCompile Include="sort.cpp" />
     <ClCompile Include="UI.cpp" />
+    <ClCompile Include="Zobrist.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="XQWLIGHT.RC" />
@@ -31,8 +33,10 @@
     <ClInclude Include="ChessBoard.h" />
     <ClInclude Include="ChessData.h" />
     <ClInclude Include="Search.h" />
+    <ClInclude Include="sort.h" />
     <ClInclude Include="UI.h" />
     <ClInclude Include="RESOURCE.H" />
+    <ClInclude Include="Zobrist.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
