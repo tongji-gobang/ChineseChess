@@ -50,3 +50,6 @@ public:
 	void display();			// 测试用
 #endif // DEBUG
 };
+
+//随机数表
+Zobrist Zrand;
