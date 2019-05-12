@@ -69,8 +69,8 @@ int compare(const void* a, const void*b) {
 
 void SortStruct::Init(int mvHash_) {
 	this->mvHash = mvHash_;		//初始化哈希走法
-	this->mvKiller1 = Search.mvKillers[pos.nDistance][0]; //从杀手表获取兄弟节点的杀手走法
-	this->mvKiller2 = Search.mvKillers[pos.nDistance][1];
+	this->mvKiller1 = Search.mvKillers[pos.RootDistance][0]; //从杀手表获取兄弟节点的杀手走法
+	this->mvKiller2 = Search.mvKillers[pos.RootDistance][1];
 	this->nPhase = PHASE_HASH;				//将最开始状态设置为获取哈希走法
 }
 

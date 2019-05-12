@@ -20,9 +20,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// 装入图片
 	Xqwl.bmpBoard = LoadResBmp(IDB_BOARD);
 	Xqwl.bmpSelected = LoadResBmp(IDB_SELECTED);
-	for (i = PIECE_KING; i <= PIECE_PAWN; i++) {
-		Xqwl.bmpPieces[SIDE_TAG(0) + i] = LoadResBmp(IDB_RK + i);
-		Xqwl.bmpPieces[SIDE_TAG(1) + i] = LoadResBmp(IDB_BK + i);
+	for (i = KING; i <= PAWN; i++) {
+		Xqwl.bmpPieces[PieceFlag(0) + i] = LoadResBmp(IDB_RK + i);
+		Xqwl.bmpPieces[PieceFlag(1) + i] = LoadResBmp(IDB_BK + i);
 	}
 
 	// 设置窗口
