@@ -17,7 +17,7 @@ struct UI{
 	HDC hdc, hdcTmp;                              // 设备句柄，只在"ClickSquare"过程中有效
 	HBITMAP bmpBoard, bmpSelected, bmpPieces[24]; // 资源图片句柄
 	int sqSelected, mvLast;                       // 选中的格子，上一步棋
-	BOOL bFlipped;                                // 是否翻转棋盘
+	BOOL bFlipped, bGameOver;                                // 是否翻转棋盘, 游戏是否结束
 };
 extern UI Xqwl;
 

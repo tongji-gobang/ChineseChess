@@ -6,6 +6,7 @@
 
 
 UI Xqwl;
+
 // TransparentBlt 的替代函数，用来修正原函数在 Windows 98 下资源泄漏的问题
 void TransparentBlt2(HDC hdcDest, int nXOriginDest, int nYOriginDest, int nWidthDest, int nHeightDest,
 	HDC hdcSrc, int nXOriginSrc, int nYOriginSrc, int nWidthSrc, int nHeightSrc, UINT crTransparent) {
@@ -100,7 +101,7 @@ void MessageBoxMute(LPCSTR lpszText) {
 	mbp.lpszText = lpszText;
 	mbp.lpszCaption = "象棋小巫师";
 	mbp.dwStyle = MB_USERICON;
-	mbp.lpszIcon = MAKEINTRESOURCE(IDI_INFORMATION);
+    mbp.lpszIcon = MAKEINTRESOURCE(IDI_INFORMATION);
 	mbp.dwContextHelpId = 0;
 	mbp.lpfnMsgBoxCallback = NULL;
 	mbp.dwLanguageId = 0;
@@ -133,29 +134,48 @@ void DrawSquare(int sq, BOOL bSelected = FALSE) {
 }
 
 // 电脑回应一步棋
- void ResponseMove(void) {
-	int pcCaptured;
-	// 电脑走一步棋
-	SetCursor((HCURSOR)LoadImage(NULL, IDC_WAIT, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED));
-	SearchMain(1000);
-	SetCursor((HCURSOR)LoadImage(NULL, IDC_ARROW, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED));
-	pos.MakeMove(Search.mvResult);
-	// 清除上一步棋的选择标记
-	DrawSquare(SrcPos(Xqwl.mvLast));
-	DrawSquare(DstPos(Xqwl.mvLast));
-	// 把电脑走的棋标记出来
-	Xqwl.mvLast = Search.mvResult;
-	DrawSquare(SrcPos(Xqwl.mvLast), DRAW_SELECTED);
-	DrawSquare(DstPos(Xqwl.mvLast), DRAW_SELECTED);
-	if (pos.IsMate()) {
-		// 如果分出胜负，那么播放胜负的声音，并且弹出不带声音的提示框
-		PlayResWav(IDR_LOSS);
-		MessageBoxMute("请再接再厉！");
-	}
-	else {
-		// 如果没有分出胜负，那么播放将军、吃子或一般走子的声音
-		PlayResWav(pos.Checked() ? IDR_CHECK2 : pcCaptured != 0 ? IDR_CAPTURE2 : IDR_MOVE2);
-	}
+static void ResponseMove(void) {
+    int vlRep;
+    // 电脑走一步棋
+    SetCursor((HCURSOR)LoadImage(NULL, IDC_WAIT, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED));
+    SearchMain(1000);
+    SetCursor((HCURSOR)LoadImage(NULL, IDC_ARROW, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED));
+    pos.MakeMove(Search.mvResult);
+    // 清除上一步棋的选择标记
+    DrawSquare(SrcPos(Xqwl.mvLast));
+    DrawSquare(DstPos(Xqwl.mvLast));
+    // 把电脑走的棋标记出来
+    Xqwl.mvLast = Search.mvResult;
+    DrawSquare(SrcPos(Xqwl.mvLast), DRAW_SELECTED);
+    DrawSquare(DstPos(Xqwl.mvLast), DRAW_SELECTED);
+    // 检查重复局面
+    vlRep = pos.IsRepetitive(3);
+    if (pos.IsMate()) {
+        // 如果分出胜负，那么播放胜负的声音，并且弹出不带声音的提示框
+        PlayResWav(IDR_LOSS);
+        MessageBoxMute("请再接再厉！");
+        Xqwl.bGameOver = TRUE;
+    }
+    else if (vlRep > 0) {
+        vlRep = pos.RepeatValue(vlRep);
+        // 注意："vlRep"是对玩家来说的分值
+        PlayResWav(vlRep < -WIN_VALUE ? IDR_LOSS : vlRep > WIN_VALUE ? IDR_WIN : IDR_DRAW);
+        MessageBoxMute(vlRep < -WIN_VALUE ? "长打作负，请不要气馁！" :
+            vlRep > WIN_VALUE ? "电脑长打作负，祝贺你取得胜利！" : "双方不变作和，辛苦了！");
+        Xqwl.bGameOver = TRUE;
+    }
+    else if (pos.MoveNum > 100) {
+        PlayResWav(IDR_DRAW);
+        MessageBoxMute("超过自然限着作和，辛苦了！");
+        Xqwl.bGameOver = TRUE;
+    }
+    else {
+        // 如果没有分出胜负，那么播放将军、吃子或一般走子的声音
+        PlayResWav(pos.LastCheck() ? IDR_CHECK2 : pos.Captured() ? IDR_CAPTURE2 : IDR_MOVE2);
+        if (pos.Captured()) {
+            pos.InitAllMoves();
+        }
+    }
 }
 
 // 点击格子事件处理

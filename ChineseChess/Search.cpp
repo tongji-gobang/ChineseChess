@@ -59,7 +59,7 @@ int SearchQuiesc(int alpha, int beta) {
 
 	// 7. 逐一走这些走法，并进行递归
 	for (i = 0; i < movenum; ++i) {
-		int PieceCaptured;
+		//int PieceCaptured;
 		if (pos.MakeMove(mvs[i])) {
 			value = -SearchQuiesc(-beta, -alpha);
 			pos.UndoMakeMove();
@@ -148,7 +148,7 @@ void RecordHash(int Flag, int vl, int Depth, int mv) {
 		hsh.vl = vl;
 	}
 
-	Search.HashTable[pos.zobr.dwKey & HASH_SIZE_end] = { Depth,Flag,hsh.vl,mv,pos.zobr.dwLock0,pos.zobr.dwLock1 };
+	Search.HashTable[pos.zobr.dwKey & HASH_SIZE_end] = { (BYTE)Depth,(BYTE)Flag,hsh.vl,(WORD)mv,pos.zobr.dwLock0,pos.zobr.dwLock1 };
 };
 
 // 求MVV/LVA值
@@ -169,7 +169,7 @@ int CompareHistory(const void *p1, const void *p2) {
 
 
 //  Alpha-Beta搜索
-int SearchFull(int vlalpha, int vlbeta, int depth, bool NoNull = FALSE) {
+int SearchFull(int vlalpha, int vlbeta, int depth, bool NoNull) {
 	int vl, vl_best;
 	int mv, mv_best, mv_hash;
 	int new_depth;
@@ -294,7 +294,7 @@ int SearchFull(int vlalpha, int vlbeta, int depth, bool NoNull = FALSE) {
 
 
 // 搜索的顶层调用
-static void SearchMain(clock_t time_limit) {
+void SearchMain(clock_t time_limit) {
 	int i, t, vl, n_mvs;
 	int mvs[MAX_GEN_MOVES];
 

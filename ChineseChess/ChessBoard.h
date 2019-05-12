@@ -1,5 +1,7 @@
+#pragma once
 #include "RESOURCE.H"
 #include "Zobrist.h"
+#include "search.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -28,8 +30,9 @@ struct MoveInfo
 	}
 };
 // 局面结构
-struct PositionStruct
+class PositionStruct
 {
+public:
 	int player;				  // 轮到谁走 0 : 红方，1 : 黑方
 	BYTE Board[256];			  // 棋盘上的棋子
 	int valueRed, valueBlack;	 // 红、黑双方的子力价值

@@ -309,7 +309,7 @@ int PositionStruct::RepeatValue(int ReNum)
   else
     value = this->RootDistance - BAN_VALUE + ((ReNum & 4) == 0 ? 0 : BAN_VALUE - this->RootDistance);
 
-  return value ? value : this->DrawValue;
+  return value ? value : this->DrawValue();
 }
 
 bool PositionStruct::NullOkay()
@@ -317,8 +317,6 @@ bool PositionStruct::NullOkay()
   return (this->player ? valueBlack : valueRed) > NULL_MARGIN;
 }
 
-// "GenerateMoves"参数
-const bool GEN_CAPTURE = true;
 
 // 生成所有走法，如果"OnlyCapture"为"true"则只生成吃子走法
 int PositionStruct::GenerateMoves(int *moves, bool OnlyCapture) const {
@@ -494,7 +492,7 @@ bool PositionStruct::LegalMove(int mv) const
 
   // 2. 判断目标格是否有自己的棋子
   dst = DstPos(mv);
-  pieceSrc = this->Board[dst];
+  pieceDst = this->Board[dst];
   if ((pieceDst & SelfSide) != 0) {
     return false;
   }

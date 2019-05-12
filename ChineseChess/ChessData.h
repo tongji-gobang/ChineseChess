@@ -22,10 +22,8 @@ enum PIECE
 	PAWN		// 兵/卒
 };
 
-const int MAX_MOVES = 256;
-
 // 判断棋子是否在棋盘中的数组
-static const char InBoard[256] = {
+const char InBoard[256] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -45,7 +43,7 @@ static const char InBoard[256] = {
 };
 
 // 判断棋子是否在九宫的数组
-static const char InFort[256] = {
+const char InFort[256] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -65,7 +63,7 @@ static const char InFort[256] = {
 };
 
 // 判断步长是否符合特定走法的数组，1=帅(将)，2=仕(士)，3=相(象)
-static const char LegalSpan[512] = {
+const char LegalSpan[512] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -102,7 +100,7 @@ static const char LegalSpan[512] = {
 };
 
 // 根据步长判断马是否蹩腿的数组
-static const char KnightPin[512] = {
+const char KnightPin[512] = {
 	0,  0,  0,  0,  0,  0,  0,  0,  0,
 	0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
 	0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -139,17 +137,17 @@ static const char KnightPin[512] = {
 };
 
 // 帅(将)的走法，分别对应 上 左 右 下
-static const char KingStep[4] = { -16, -1, 1, 16 };
+const char KingStep[4] = { -16, -1, 1, 16 };
 // 仕(士)的走法，分别对应 左上 右上 左下 右下
-static const char AdvisorStep[4] = { -17, -15, 15, 17 };
+const char AdvisorStep[4] = { -17, -15, 15, 17 };
 // 马的走法，以当前马的位置为原点，每两种走法对应一个马腿的位置，分别为 -16, -1, 1, 16
-static const char KnightStep[4][2] = { { -33, -31 },{ -18, 14 },{ -14, 18 },{ 31, 33 } };
+const char KnightStep[4][2] = { { -33, -31 },{ -18, 14 },{ -14, 18 },{ 31, 33 } };
 // 以当前将/帅的位置为原点，可能被将军的马的偏移位置
 // 一个马腿对应两个位置(马腿位置为相对于原点仕的可达位置)，对应的四个马腿为 -17， -15， 15， 17
-static const char KnightCheckStep[4][2] = { { -33, -18 },{ -31, -14 },{ 14, 31 },{ 18, 33 } };
+const char KnightCheckStep[4][2] = { { -33, -18 },{ -31, -14 },{ 14, 31 },{ 18, 33 } };
 
 // 棋盘初始设置
-static const BYTE StartupBoard[256] = {
+const BYTE StartupBoard[256] = {
 	0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
 	0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
 	0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -169,7 +167,7 @@ static const BYTE StartupBoard[256] = {
 };
 
 // 子力位置价值表
-static const BYTE PiecePosValue[7][256] = {
+const BYTE PiecePosValue[7][256] = {
 	{ // 帅(将)
 		0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
 		0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
