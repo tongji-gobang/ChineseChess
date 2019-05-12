@@ -22,6 +22,7 @@
     <ClCompile Include="ChessBoard.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Search.cpp" />
+    <ClCompile Include="sort.cpp" />
     <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -31,6 +32,7 @@
     <ClInclude Include="ChessBoard.h" />
     <ClInclude Include="ChessData.h" />
     <ClInclude Include="Search.h" />
+    <ClInclude Include="sort.h" />
     <ClInclude Include="UI.h" />
     <ClInclude Include="RESOURCE.H" />
   </ItemGroup>
