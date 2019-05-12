@@ -30,7 +30,7 @@ struct MoveInfo
 // 局面结构
 struct PositionStruct
 {
-	int sdPlayer;				  // 轮到谁走 0 : 红方，1 : 黑方
+	int player;				  // 轮到谁走 0 : 红方，1 : 黑方
 	BYTE Board[256];			  // 棋盘上的棋子
 	int valueRed, valueBlack;	 // 红、黑双方的子力价值
 	int RootDistance;			  // 距离根节点的步数
@@ -43,14 +43,14 @@ struct PositionStruct
 	void Startup();		 // 初始化棋盘
 	void ChangeSide();   // 交换走子方
 
-	void AddPiece(int pos, int piece); // 给棋盘上添加棋子
-	void DelPiece(int pos, int piece); // 删除棋盘上的棋子
+	void AddPiece(int position, int piece); // 给棋盘上添加棋子
+	void DelPiece(int position, int piece); // 删除棋盘上的棋子
 	int Evaluate() const;							 // 局面评价函数
 	int MovePiece(int move);						 // 搬一步棋的棋子
-	void UndoMovePiece(int move, int PieceCaptured); // 撤消搬一步棋的棋子
+	void UndoMovePiece(int move, int pieceCaptured); // 撤消搬一步棋的棋子
 	bool MakeMove(int move);	 // 走一步棋
-	void UndoMakeMove(int move, int PieceCaptured);  // 撤消走一步棋
-	int GenerateMoves(int *moves, bool OnlyCapture) const;			 // 生成所有走法
+	void UndoMakeMove();  // 撤消走一步棋
+	int GenerateMoves(int *moves, bool OnlyCapture = false) const;			 // 生成所有走法
 	bool LegalMove(int move) const;					 // 判断走法是否合理
 	bool Checked() const;							 // 判断是否被将军
 	bool IsMate();									 // 判断是否被杀

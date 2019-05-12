@@ -1,6 +1,7 @@
 ﻿#include"ChessBoard.h"
 #include"ChessData.h"
 #include"Search.h"
+#include <cstring>
 
 
 PositionStruct pos;
@@ -204,6 +205,116 @@ bool PositionStruct::MakeMove(int move) {
   this->MoveNum ++;
   this->RootDistance ++;
   return true;
+}
+
+void PositionStruct::ChangeSide()
+{
+  this->player = 1 - this->player;
+  zobr ^= Zrand.Player;
+}
+
+void PositionStruct::ClearBoard()
+{
+  this->player = 0;
+  this->valueRed = 0;
+  this->valueBlack = 0;
+  this->RootDistance = 0;
+  memset(this->Board, 0, sizeof(this->Board));
+  zobr.InitZero();
+}
+
+void PositionStruct::InitAllMoves()
+{
+  this->AllMoves[0].push(0, 0, Checked(), zobr.dwKey);
+  this->MoveNum = 1;
+}
+
+void PositionStruct::AddPiece(int position, int piece)
+{
+  this->Board[position] = piece;
+
+  if ( piece >= 16 ){
+    this->valueBlack += PiecePosValue[piece - 16][CorrespondPos(position)];
+    zobr ^= Zrand.Table[piece - 9][position];
+  }
+  else {
+    valueRed += PiecePosValue[piece - 8][position];
+    zobr ^= Zrand.Table[piece - 8][position];
+  }
+}
+
+void PositionStruct::DelPiece(int position, int piece)
+{
+  this->Board[position] = 0;
+  if ( piece >= 16 ){
+    this->valueBlack -= PiecePosValue[piece - 16][CorrespondPos(position)];
+    zobr ^= Zrand.Table[piece - 9][position];
+  }
+  else {
+    valueRed -= PiecePosValue[piece - 8][position];
+    zobr ^= Zrand.Table[piece - 8][position];
+  }
+}
+
+int PositionStruct::Evaluate() const
+{
+  return (this->player == 0 ? valueRed - valueBlack : valueBlack - valueRed) + ADVANCED_VALUE;
+}
+
+bool PositionStruct::LastCheck()
+{
+  return this->AllMoves[this->MoveNum - 1].Check;
+}
+
+bool PositionStruct::Captured() const
+{
+  return this->AllMoves[this->MoveNum - 1].pieceCaptured != 0;
+}
+
+void PositionStruct::UndoMakeMove()
+{
+  --this->MoveNum;
+  --this->RootDistance;
+  this->ChangeSide();
+  this->UndoMovePiece(this->AllMoves[this->MoveNum - 1].thisMove, this->AllMoves[this->MoveNum - 1].pieceCaptured);
+}
+
+void PositionStruct::MoveNull()
+{
+  DWORD key;
+  key = this->zobr.dwKey;
+  this->ChangeSide();
+  this->AllMoves[this->MoveNum - 1].push(0, 0, false, key);
+  ++this->MoveNum;
+  ++this->RootDistance;
+}
+
+void PositionStruct::UndoMoveNull()
+{
+  --this->RootDistance;
+  --this->MoveNum;
+  this->ChangeSide();
+}
+
+int PositionStruct::DrawValue()
+{
+  return (this->RootDistance & 1) == 0 ? -DRAW_VALUE : DRAW_VALUE;
+}
+
+int PositionStruct::RepeatValue(int ReNum)
+{
+  int value;
+  if ( (ReNum & 2) == 0 )
+    value = 0;
+  else
+    value = this->RootDistance - BAN_VALUE + ((ReNum & 4) == 0 ? 0 : BAN_VALUE - this->RootDistance);
+
+  return value ? value : this->DrawValue;
+}
+
+bool PositionStruct::NullOkay()
+{
+  return (this->player ? valueBlack : valueRed) > NULL_MARGIN;
 }
 
 // "GenerateMoves"参数
