@@ -20,6 +20,8 @@ enum PIECE
 	PAWN		// 兵/卒
 };
 
+const int MAX_MOVES = 256;
+
 // 判断棋子是否在棋盘中的数组
 static const char InBoard[256] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
