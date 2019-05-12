@@ -1,7 +1,8 @@
 
 #pragma once
 //#inlcude "BOOKitem"
-
+#include <Windows.h>
+#include <time.h>
 const int MAX_GEN_MOVES = 128; // 最大的生成走法数
 const int MAX_MOVES = 256;     // 最大的历史走法数
 const int LIMIT_DEPTH = 64;    // 最大的搜索深度
@@ -56,13 +57,13 @@ extern S Search;
 
 							   
  // "qsort"按历史表排序的比较函数
-static int CompareHistory(const void *lpmv1, const void *lpmv2);
+int CompareHistory(const void *lpmv1, const void *lpmv2);
 
 // 超出边界(Fail-Soft)的Alpha-Beta搜索过程
-static int SearchFull(int vlAlpha, int vlBeta, int nDepth);
+int SearchFull(int vlalpha, int vlbeta, int nDepth, bool NoNull = FALSE);
 
 // 迭代加深搜索过程
-void SearchMain(void);
+void SearchMain(clock_t time_limit);
 
 // "GenerateMoves"参数，是否只产生吃子着法
 const bool GEN_CAPTURE = true;
@@ -90,4 +91,3 @@ static int CompareHistory(const void *p1, const void *p2);
 int SearchQuiesc(int alpha, int beta);
 
 
-#pragma once

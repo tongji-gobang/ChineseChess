@@ -15,7 +15,7 @@ using namespace std;
 // RC4密码流生成器
 class RC4Struct {
 public:
-	BYTE s[256];
+    BYTE s[256]{};
 	int x, y;
 public:
 	RC4Struct();			// 用空密钥初始化密码流生成器
@@ -52,4 +52,4 @@ public:
 };
 
 //随机数表
-Zobrist Zrand;
+extern Zobrist Zrand;

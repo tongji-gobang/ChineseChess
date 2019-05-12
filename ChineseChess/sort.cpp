@@ -76,7 +76,7 @@ void SortStruct::Init(int mvHash_) {
 
 //获取下一个走法
 int SortStruct::Next() {
-	int mv;
+	//int mv;
 
 	//若状态为取散列表走法
 	if (nPhase == PHASE_HASH) {

@@ -1,5 +1,7 @@
 #include "Zobrist.h"
 
+Zobrist Zrand;
+
 // 用空密钥初始化密码流生成器
 RC4Struct::RC4Struct()
 {
