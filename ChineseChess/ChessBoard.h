@@ -45,13 +45,12 @@ struct PositionStruct
 
 	void AddPiece(int pos, int piece); // 给棋盘上添加棋子
 	void DelPiece(int pos, int piece); // 删除棋盘上的棋子
-	void AddDelPiece(int src, int dst, int piece);
 	int Evaluate() const;							 // 局面评价函数
 	int MovePiece(int move);						 // 搬一步棋的棋子
 	void UndoMovePiece(int move, int PieceCaptured); // 撤消搬一步棋的棋子
-	bool MakeMove(int move, int &PieceCaptured);	 // 走一步棋
+	bool MakeMove(int move);	 // 走一步棋
 	void UndoMakeMove(int move, int PieceCaptured);  // 撤消走一步棋
-	int GenerateMoves(int *moves) const;			 // 生成所有走法
+	int GenerateMoves(int *moves, bool OnlyCapture) const;			 // 生成所有走法
 	bool LegalMove(int move) const;					 // 判断走法是否合理
 	bool Checked() const;							 // 判断是否被将军
 	bool IsMate();									 // 判断是否被杀
@@ -93,7 +92,7 @@ bool LegalMoveBishop(int src, int dst);
 // 相(象)眼的位置
 int BishopCenter(int src, int dst);
 // 马腿的位置
-int KNIGHT_PIN(int src, int dst);
+int KnightPinPos(int src, int dst);
 // 是否过河 true : 过河， false : 未过河
 bool CrossRiver(int posIndex, int player);
 // 是否在河的同一边

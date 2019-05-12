@@ -1,3 +1,5 @@
+#pragma once
+
 #include<Windows.h>
 
 // ∆Â≈Ã∑∂Œß
@@ -289,4 +291,3 @@ static const BYTE PiecePosValue[7][256] = {
 		0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
 	}
 };
-#pragma once

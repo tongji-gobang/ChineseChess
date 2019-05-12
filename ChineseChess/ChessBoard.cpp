@@ -77,7 +77,7 @@ int BishopCenter(int src, int dst)
 }
 
 // 马腿的位置
-int KNIGHT_PIN(int src, int dst) 
+int KnightPinPos(int src, int dst) 
 {
 	return src + KnightPin[dst - src + 256];
 }
@@ -148,214 +148,214 @@ int MirrorMove(int move)
 }
 
 // 初始化棋盘
-void PositionStruct::Startup(void) {
-  int sq, pc;
+void PositionStruct::Startup() {
+  int posIndex, piece;
   ClearBoard();
-  for (sq = 0; sq < 256; sq ++) {
-    pc = cucpcStartup[sq];
-    if (pc != 0) {
-      AddPiece(sq, pc);
+  for ( posIndex = 0; posIndex < 256; ++posIndex) {
+    piece = StartupBoard[posIndex];
+    if (piece != 0) {
+      AddPiece(posIndex, piece);
     }
   }
-  SetIrrev();
+  this->InitAllMoves();
 }
 
 // 搬一步棋的棋子
-int PositionStruct::MovePiece(int mv) {
-  int sqSrc, sqDst, pc, pcCaptured;
-  sqSrc = SRC(mv);
-  sqDst = DST(mv);
-  pcCaptured = ucpcSquares[sqDst];
-  if (pcCaptured != 0) {
-    DelPiece(sqDst, pcCaptured);
+int PositionStruct::MovePiece(int move) {
+  int src, dst, piece, pieceCaptured;
+  src = SrcPos(move);
+  dst = DstPos(move);
+  pieceCaptured = this->Board[dst];
+  if (pieceCaptured != 0) {
+    this->DelPiece(dst, pieceCaptured);
   }
-  pc = ucpcSquares[sqSrc];
-  DelPiece(sqSrc, pc);
-  AddPiece(sqDst, pc);
-  return pcCaptured;
+  piece = this->Board[src];
+  this->DelPiece(src, piece);
+  this->AddPiece(dst, piece);
+  return pieceCaptured;
 }
 
 // 撤消搬一步棋的棋子
-void PositionStruct::UndoMovePiece(int mv, int pcCaptured) {
-  int sqSrc, sqDst, pc;
-  sqSrc = SRC(mv);
-  sqDst = DST(mv);
-  pc = ucpcSquares[sqDst];
-  DelPiece(sqDst, pc);
-  AddPiece(sqSrc, pc);
-  if (pcCaptured != 0) {
-    AddPiece(sqDst, pcCaptured);
+void PositionStruct::UndoMovePiece(int move, int pieceCaptured) {
+  int src, dst, piece;
+  src = SrcPos(move);
+  dst = DstPos(move);
+  piece = Board[dst];
+  this->DelPiece(dst, piece);
+  this->AddPiece(src, piece);
+  if (pieceCaptured != 0) {
+    AddPiece(dst, pieceCaptured);
   }
 }
 
 // 走一步棋
-BOOL PositionStruct::MakeMove(int mv) {
-  int pcCaptured;
+bool PositionStruct::MakeMove(int move) {
+  int pieceCaptured;
   DWORD dwKey;
 
   dwKey = zobr.dwKey;
-  pcCaptured = MovePiece(mv);
+  pieceCaptured = MovePiece(move);
   if (Checked()) {
-    UndoMovePiece(mv, pcCaptured);
-    return FALSE;
+    UndoMovePiece(move, pieceCaptured);
+    return false;
   }
   ChangeSide();
-  mvsList[nMoveNum].Set(mv, pcCaptured, Checked(), dwKey);
-  nMoveNum ++;
-  nDistance ++;
-  return TRUE;
+  this->AllMoves[this->MoveNum].push(move, pieceCaptured, Checked(), dwKey);
+  this->MoveNum ++;
+  this->RootDistance ++;
+  return true;
 }
 
 // "GenerateMoves"参数
-const BOOL GEN_CAPTURE = TRUE;
+const bool GEN_CAPTURE = true;
 
-// 生成所有走法，如果"bCapture"为"TRUE"则只生成吃子走法
-int PositionStruct::GenerateMoves(int *mvs, BOOL bCapture) const {
-  int i, j, nGenMoves, nDelta, sqSrc, sqDst;
-  int pcSelfSide, pcOppSide, pcSrc, pcDst;
+// 生成所有走法，如果"OnlyCapture"为"true"则只生成吃子走法
+int PositionStruct::GenerateMoves(int *moves, bool OnlyCapture) const {
+  int i, j, NumGenerate, delta, src, dst;
+  int SelfSide, OppSide, pieceSrc, pieceDst;
   // 生成所有走法，需要经过以下几个步骤：
 
-  nGenMoves = 0;
-  pcSelfSide = SIDE_TAG(sdPlayer);
-  pcOppSide = OPP_SIDE_TAG(sdPlayer);
-  for (sqSrc = 0; sqSrc < 256; sqSrc ++) {
+  NumGenerate = 0;
+  SelfSide = PieceFlag(sdPlayer);
+  OppSide = OppPieceFlag(sdPlayer);
+  for (src = 0; src < 256; src ++) {
 
     // 1. 找到一个本方棋子，再做以下判断：
-    pcSrc = ucpcSquares[sqSrc];
-    if ((pcSrc & pcSelfSide) == 0) {
+    pieceSrc = this->Board[src];
+    if ((pieceSrc & SelfSide) == 0) {
       continue;
     }
 
     // 2. 根据棋子确定走法
-    switch (pcSrc - pcSelfSide) {
-    case PIECE_KING:
+    switch (pieceSrc - SelfSide) {
+    case KING:
       for (i = 0; i < 4; i ++) {
-        sqDst = sqSrc + ccKingDelta[i];
-        if (!IN_FORT(sqDst)) {
+        dst = src + KingStep[i];
+        if (!InFort[dst]) {
           continue;
         }
-        pcDst = ucpcSquares[sqDst];
-        if (bCapture ? (pcDst & pcOppSide) != 0 : (pcDst & pcSelfSide) == 0) {
-          mvs[nGenMoves] = MOVE(sqSrc, sqDst);
-          nGenMoves ++;
+        pieceDst = this->Board[dst];
+        if (OnlyCapture ? (pieceDst & OppSide) != 0 : (pieceDst & SelfSide) == 0) {
+          moves[NumGenerate] = Move(src, dst);
+          NumGenerate ++;
         }
       }
       break;
-    case PIECE_ADVISOR:
+    case ADVISOR:
       for (i = 0; i < 4; i ++) {
-        sqDst = sqSrc + ccAdvisorDelta[i];
-        if (!IN_FORT(sqDst)) {
+        dst = src + AdvisorStep[i];
+        if (!InFort[dst]) {
           continue;
         }
-        pcDst = ucpcSquares[sqDst];
-        if (bCapture ? (pcDst & pcOppSide) != 0 : (pcDst & pcSelfSide) == 0) {
-          mvs[nGenMoves] = MOVE(sqSrc, sqDst);
-          nGenMoves ++;
+        pieceDst = this->Board[dst];
+        if (OnlyCapture ? (pieceDst & OppSide) != 0 : (pieceDst & SelfSide) == 0) {
+          moves[NumGenerate] = Move(src, dst);
+          NumGenerate ++;
         }
       }
       break;
-    case PIECE_BISHOP:
+    case BISHOP:
       for (i = 0; i < 4; i ++) {
-        sqDst = sqSrc + ccAdvisorDelta[i];
-        if (!(IN_BOARD(sqDst) && HOME_HALF(sqDst, sdPlayer) && ucpcSquares[sqDst] == 0)) {
+        dst = src + AdvisorStep[i];
+        if (!(InBoard[dst] && !CrossRiver(dst, sdPlayer) && this->Board[dst] == 0)) {
           continue;
         }
-        sqDst += ccAdvisorDelta[i];
-        pcDst = ucpcSquares[sqDst];
-        if (bCapture ? (pcDst & pcOppSide) != 0 : (pcDst & pcSelfSide) == 0) {
-          mvs[nGenMoves] = MOVE(sqSrc, sqDst);
-          nGenMoves ++;
+        dst += AdvisorStep[i];
+        pieceDst = this->Board[dst];
+        if (OnlyCapture ? (pieceDst & OppSide) != 0 : (pieceDst & SelfSide) == 0) {
+          moves[NumGenerate] = Move(src, dst);
+          NumGenerate ++;
         }
       }
       break;
-    case PIECE_KNIGHT:
+    case KNIGHT:
       for (i = 0; i < 4; i ++) {
-        sqDst = sqSrc + ccKingDelta[i];
-        if (ucpcSquares[sqDst] != 0) {
+        dst = src + KingStep[i];
+        if (this->Board[dst] != 0) {
           continue;
         }
         for (j = 0; j < 2; j ++) {
-          sqDst = sqSrc + ccKnightDelta[i][j];
-          if (!IN_BOARD(sqDst)) {
+          dst = src + KnightStep[i][j];
+          if (!InBoard[dst]) {
             continue;
           }
-          pcDst = ucpcSquares[sqDst];
-          if (bCapture ? (pcDst & pcOppSide) != 0 : (pcDst & pcSelfSide) == 0) {
-            mvs[nGenMoves] = MOVE(sqSrc, sqDst);
-            nGenMoves ++;
+          pieceDst = this->Board[dst];
+          if (OnlyCapture ? (pieceDst & OppSide) != 0 : (pieceDst & SelfSide) == 0) {
+            moves[NumGenerate] = Move(src, dst);
+            NumGenerate ++;
           }
         }
       }
       break;
-    case PIECE_ROOK:
+    case ROOK:
       for (i = 0; i < 4; i ++) {
-        nDelta = ccKingDelta[i];
-        sqDst = sqSrc + nDelta;
-        while (IN_BOARD(sqDst)) {
-          pcDst = ucpcSquares[sqDst];
-          if (pcDst == 0) {
-            if (!bCapture) {
-              mvs[nGenMoves] = MOVE(sqSrc, sqDst);
-              nGenMoves ++;
+        delta = KingStep[i];
+        dst = src + delta;
+        while (InBoard[dst]) {
+          pieceDst = this->Board[dst];
+          if (pieceDst == 0) {
+            if (!OnlyCapture) {
+              moves[NumGenerate] = Move(src, dst);
+              NumGenerate ++;
             }
           } else {
-            if ((pcDst & pcOppSide) != 0) {
-              mvs[nGenMoves] = MOVE(sqSrc, sqDst);
-              nGenMoves ++;
+            if ((pieceDst & OppSide) != 0) {
+              moves[NumGenerate] = Move(src, dst);
+              NumGenerate ++;
             }
             break;
           }
-          sqDst += nDelta;
+          dst += delta;
         }
       }
       break;
-    case PIECE_CANNON:
+    case CANNON:
       for (i = 0; i < 4; i ++) {
-        nDelta = ccKingDelta[i];
-        sqDst = sqSrc + nDelta;
-        while (IN_BOARD(sqDst)) {
-          pcDst = ucpcSquares[sqDst];
-          if (pcDst == 0) {
-            if (!bCapture) {
-              mvs[nGenMoves] = MOVE(sqSrc, sqDst);
-              nGenMoves ++;
+        delta = KingStep[i];
+        dst = src + delta;
+        while (InBoard[dst]) {
+          pieceDst = this->Board[dst];
+          if (pieceDst == 0) {
+            if (!OnlyCapture) {
+              moves[NumGenerate] = Move(src, dst);
+              NumGenerate ++;
             }
           } else {
             break;
           }
-          sqDst += nDelta;
+          dst += delta;
         }
-        sqDst += nDelta;
-        while (IN_BOARD(sqDst)) {
-          pcDst = ucpcSquares[sqDst];
-          if (pcDst != 0) {
-            if ((pcDst & pcOppSide) != 0) {
-              mvs[nGenMoves] = MOVE(sqSrc, sqDst);
-              nGenMoves ++;
+        dst += delta;
+        while (InBoard[dst]) {
+          pieceDst = this->Board[dst];
+          if (pieceDst != 0) {
+            if ((pieceDst & OppSide) != 0) {
+              moves[NumGenerate] = Move(src, dst);
+              NumGenerate ++;
             }
             break;
           }
-          sqDst += nDelta;
+          dst += delta;
         }
       }
       break;
-    case PIECE_PAWN:
-      sqDst = SQUARE_FORWARD(sqSrc, sdPlayer);
-      if (IN_BOARD(sqDst)) {
-        pcDst = ucpcSquares[sqDst];
-        if (bCapture ? (pcDst & pcOppSide) != 0 : (pcDst & pcSelfSide) == 0) {
-          mvs[nGenMoves] = MOVE(sqSrc, sqDst);
-          nGenMoves ++;
+    case PAWN:
+      dst = NextPosCol(src, sdPlayer);
+      if (InBoard[dst]) {
+        pieceDst = this->Board[dst];
+        if (OnlyCapture ? (pieceDst & OppSide) != 0 : (pieceDst & SelfSide) == 0) {
+          moves[NumGenerate] = Move(src, dst);
+          NumGenerate ++;
         }
       }
-      if (AWAY_HALF(sqSrc, sdPlayer)) {
-        for (nDelta = -1; nDelta <= 1; nDelta += 2) {
-          sqDst = sqSrc + nDelta;
-          if (IN_BOARD(sqDst)) {
-            pcDst = ucpcSquares[sqDst];
-            if (bCapture ? (pcDst & pcOppSide) != 0 : (pcDst & pcSelfSide) == 0) {
-              mvs[nGenMoves] = MOVE(sqSrc, sqDst);
-              nGenMoves ++;
+      if (!CrossRiver(src, sdPlayer)) {
+        for (delta = -1; delta <= 1; delta += 2) {
+          dst = src + delta;
+          if (InBoard[dst]) {
+            pieceDst = this->Board[dst];
+            if (OnlyCapture ? (pieceDst & OppSide) != 0 : (pieceDst & SelfSide) == 0) {
+              moves[NumGenerate] = Move(src, dst);
+              NumGenerate ++;
             }
           }
         }
@@ -363,107 +363,108 @@ int PositionStruct::GenerateMoves(int *mvs, BOOL bCapture) const {
       break;
     }
   }
-  return nGenMoves;
+  return NumGenerate;
 }
 
 // 判断走法是否合理
-BOOL PositionStruct::LegalMove(int mv) const {
-  int sqSrc, sqDst, sqPin;
-  int pcSelfSide, pcSrc, pcDst, nDelta;
+bool PositionStruct::LegalMove(int mv) const 
+{
+  int src, dst, pin;
+  int SelfSide, pieceSrc, pieceDst, delta;
   // 判断走法是否合法，需要经过以下的判断过程：
 
   // 1. 判断起始格是否有自己的棋子
-  sqSrc = SRC(mv);
-  pcSrc = ucpcSquares[sqSrc];
-  pcSelfSide = SIDE_TAG(sdPlayer);
-  if ((pcSrc & pcSelfSide) == 0) {
-    return FALSE;
+  src = SrcPos(mv);
+  pieceSrc = this->Board[src];
+  SelfSide = PieceFlag(sdPlayer);
+  if ((pieceSrc & SelfSide) == 0) {
+    return false;
   }
 
   // 2. 判断目标格是否有自己的棋子
-  sqDst = DST(mv);
-  pcDst = ucpcSquares[sqDst];
-  if ((pcDst & pcSelfSide) != 0) {
-    return FALSE;
+  dst = DstPos(mv);
+  pieceSrc = this->Board[dst];
+  if ((pieceDst & SelfSide) != 0) {
+    return false;
   }
 
   // 3. 根据棋子的类型检查走法是否合理
-  switch (pcSrc - pcSelfSide) {
-  case PIECE_KING:
-    return IN_FORT(sqDst) && KING_SPAN(sqSrc, sqDst);
-  case PIECE_ADVISOR:
-    return IN_FORT(sqDst) && ADVISOR_SPAN(sqSrc, sqDst);
-  case PIECE_BISHOP:
-    return SAME_HALF(sqSrc, sqDst) && BISHOP_SPAN(sqSrc, sqDst) &&
-        ucpcSquares[BISHOP_PIN(sqSrc, sqDst)] == 0;
-  case PIECE_KNIGHT:
-    sqPin = KNIGHT_PIN(sqSrc, sqDst);
-    return sqPin != sqSrc && ucpcSquares[sqPin] == 0;
-  case PIECE_ROOK:
-  case PIECE_CANNON:
-    if (SAME_RANK(sqSrc, sqDst)) {
-      nDelta = (sqDst < sqSrc ? -1 : 1);
-    } else if (SAME_FILE(sqSrc, sqDst)) {
-      nDelta = (sqDst < sqSrc ? -16 : 16);
+  switch (pieceSrc - SelfSide) {
+  case KING:
+    return InFort[dst] && LegalMoveKing(src, dst);
+  case ADVISOR:
+    return InFort[dst] && LegalMoveAdvisor(src, dst);
+  case BISHOP:
+    return !CrossRiver(src, dst) && LegalMoveBishop(src, dst) &&
+        this->Board[LegalMoveBishop(src, dst)] == 0;
+  case KNIGHT:
+    pin = KnightPinPos(src, dst);
+    return pin != src && this->Board[pin] == 0;
+  case ROOK:
+  case CANNON:
+    if (SameRow(src, dst)) {
+      delta = (dst < src ? -1 : 1);
+    } else if (SameCol(src, dst)) {
+      delta = (dst < src ? -16 : 16);
     } else {
-      return FALSE;
+      return false;
     }
-    sqPin = sqSrc + nDelta;
-    while (sqPin != sqDst && ucpcSquares[sqPin] == 0) {
-      sqPin += nDelta;
+    pin = src + delta;
+    while (pin != dst && this->Board[pin] == 0) {
+      pin += delta;
     }
-    if (sqPin == sqDst) {
-      return pcDst == 0 || pcSrc - pcSelfSide == PIECE_ROOK;
-    } else if (pcDst != 0 && pcSrc - pcSelfSide == PIECE_CANNON) {
-      sqPin += nDelta;
-      while (sqPin != sqDst && ucpcSquares[sqPin] == 0) {
-        sqPin += nDelta;
+    if (pin == dst) {
+      return pieceDst == 0 || pieceSrc - SelfSide == ROOK;
+    } else if (pieceDst != 0 && pieceSrc - SelfSide == CANNON) {
+      pin += delta;
+      while (pin != dst && this->Board[pin] == 0) {
+        pin += delta;
       }
-      return sqPin == sqDst;
+      return pin == dst;
     } else {
-      return FALSE;
+      return false;
     }
-  case PIECE_PAWN:
-    if (AWAY_HALF(sqDst, sdPlayer) && (sqDst == sqSrc - 1 || sqDst == sqSrc + 1)) {
-      return TRUE;
+  case PAWN:
+    if (CrossRiver(dst, sdPlayer) && (dst == src - 1 || dst == src + 1)) {
+      return true;
     }
-    return sqDst == SQUARE_FORWARD(sqSrc, sdPlayer);
+    return dst == NextPosCol(src, sdPlayer);
   default:
-    return FALSE;
+    return false;
   }
 }
 
 // 判断是否被将军
-BOOL PositionStruct::Checked() const {
-  int i, j, sqSrc, sqDst;
-  int pcSelfSide, pcOppSide, pcDst, nDelta;
-  pcSelfSide = SIDE_TAG(sdPlayer);
-  pcOppSide = OPP_SIDE_TAG(sdPlayer);
+bool PositionStruct::Checked() const {
+  int i, j, src, dst;
+  int SelfSide, OppSide, pieceDst, delta;
+  SelfSide = PieceFlag(sdPlayer);
+  OppSide = OppPieceFlag(sdPlayer);
   // 找到棋盘上的帅(将)，再做以下判断：
 
-  for (sqSrc = 0; sqSrc < 256; sqSrc ++) {
-    if (ucpcSquares[sqSrc] != pcSelfSide + PIECE_KING) {
+  for (src = 0; src < 256; src ++) {
+    if (this->Board[src] != SelfSide + KING) {
       continue;
     }
 
     // 1. 判断是否被对方的兵(卒)将军
-    if (ucpcSquares[SQUARE_FORWARD(sqSrc, sdPlayer)] == pcOppSide + PIECE_PAWN) {
+    if (this->Board[NextPosCol(src, sdPlayer)] == OppSide + PAWN) {
       return TRUE;
     }
-    for (nDelta = -1; nDelta <= 1; nDelta += 2) {
-      if (ucpcSquares[sqSrc + nDelta] == pcOppSide + PIECE_PAWN) {
+    for (delta = -1; delta <= 1; delta += 2) {
+      if (this->Board[src + delta] == OppSide + PAWN) {
         return TRUE;
       }
     }
 
     // 2. 判断是否被对方的马将军(以仕(士)的步长当作马腿)
     for (i = 0; i < 4; i ++) {
-      if (ucpcSquares[sqSrc + ccAdvisorDelta[i]] != 0) {
+      if (this->Board[src + AdvisorStep[i]] != 0) {
         continue;
       }
       for (j = 0; j < 2; j ++) {
-        pcDst = ucpcSquares[sqSrc + ccKnightCheckDelta[i][j]];
-        if (pcDst == pcOppSide + PIECE_KNIGHT) {
+        pieceDst = this->Board[src + KnightCheckStep[i][j]];
+        if (pieceDst == OppSide + KNIGHT) {
           return TRUE;
         }
       }
@@ -471,28 +472,28 @@ BOOL PositionStruct::Checked() const {
 
     // 3. 判断是否被对方的车或炮将军(包括将帅对脸)
     for (i = 0; i < 4; i ++) {
-      nDelta = ccKingDelta[i];
-      sqDst = sqSrc + nDelta;
-      while (IN_BOARD(sqDst)) {
-        pcDst = ucpcSquares[sqDst];
-        if (pcDst != 0) {
-          if (pcDst == pcOppSide + PIECE_ROOK || pcDst == pcOppSide + PIECE_KING) {
+      delta = KingStep[i];
+      dst = src + delta;
+      while (InBoard[dst]) {
+        pieceDst = this->Board[dst];
+        if (pieceDst != 0) {
+          if (pieceDst == OppSide + ROOK || pieceDst == OppSide + KING) {
             return TRUE;
           }
           break;
         }
-        sqDst += nDelta;
+        dst += delta;
       }
-      sqDst += nDelta;
-      while (IN_BOARD(sqDst)) {
-        int pcDst = ucpcSquares[sqDst];
-        if (pcDst != 0) {
-          if (pcDst == pcOppSide + PIECE_CANNON) {
+      dst += delta;
+      while (InBoard[dst]) {
+        int pieceDst = this->Board[dst];
+        if (pieceDst != 0) {
+          if (pieceDst == OppSide + CANNON) {
             return TRUE;
           }
           break;
         }
-        sqDst += nDelta;
+        dst += delta;
       }
     }
     return FALSE;
@@ -501,45 +502,48 @@ BOOL PositionStruct::Checked() const {
 }
 
 // 判断是否被杀
-BOOL PositionStruct::IsMate(void) {
+bool PositionStruct::IsMate() {
   int i, nGenMoveNum, pcCaptured;
-  int mvs[MAX_GEN_MOVES];
+  int moves[MAX_GEN_MOVES];
 
-  nGenMoveNum = GenerateMoves(mvs);
+  nGenMoveNum = GenerateMoves(moves, false);
   for (i = 0; i < nGenMoveNum; i ++) {
-    pcCaptured = MovePiece(mvs[i]);
+    pcCaptured = MovePiece(moves[i]);
     if (!Checked()) {
-      UndoMovePiece(mvs[i], pcCaptured);
+      UndoMovePiece(moves[i], pcCaptured);
       return FALSE;
     } else {
-      UndoMovePiece(mvs[i], pcCaptured);
+      UndoMovePiece(moves[i], pcCaptured);
     }
   }
   return TRUE;
 }
 
 // 检测重复局面
-int PositionStruct::RepStatus(int nRecur) const {
-  BOOL bSelfSide, bPerpCheck, bOppPerpCheck;
-  const MoveStruct *lpmvs;
+int PositionStruct::IsRepetitive(int ReLoop)
+{
+  bool SelfSide, PerpetualCheck, OppPerpetualCheck;
+  const MoveInfo *ptrMoves;
 
-  bSelfSide = FALSE;
-  bPerpCheck = bOppPerpCheck = TRUE;
-  lpmvs = mvsList + nMoveNum - 1;
-  while (lpmvs->wmv != 0 && lpmvs->ucpcCaptured == 0) {
-    if (bSelfSide) {
-      bPerpCheck = bPerpCheck && lpmvs->ucbCheck;
-      if (lpmvs->dwKey == zobr.dwKey) {
-        nRecur --;
-        if (nRecur == 0) {
-          return 1 + (bPerpCheck ? 2 : 0) + (bOppPerpCheck ? 4 : 0);
+  SelfSide = false;
+  PerpetualCheck = true;
+  OppPerpetualCheck = true;
+  ptrMoves = this->AllMoves + this->MoveNum - 1;
+  while (ptrMoves->thisMove != 0 && ptrMoves->pieceCaptured == 0) {
+    if (SelfSide) {
+      PerpetualCheck = PerpetualCheck && ptrMoves->Check;
+      if (ptrMoves->thisKey == zobr.dwKey) {
+		  --ReLoop;
+		  if (ReLoop == 0)
+		  {
+			  return 1 + (PerpetualCheck ? 2 : 0) + (OppPerpetualCheck ? 4 : 0);
         }
       }
     } else {
-      bOppPerpCheck = bOppPerpCheck && lpmvs->ucbCheck;
+      OppPerpetualCheck = OppPerpetualCheck && ptrMoves->Check;
     }
-    bSelfSide = !bSelfSide;
-    lpmvs --;
+    SelfSide = !SelfSide;
+    ptrMoves --;
   }
   return 0;
 }
