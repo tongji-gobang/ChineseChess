@@ -1,7 +1,7 @@
 
 #pragma once
 //#inlcude "BOOKitem"
-
+#include <Windows.h>
 const int MAX_GEN_MOVES = 128; // 最大的生成走法数
 const int MAX_MOVES = 256;     // 最大的历史走法数
 const int LIMIT_DEPTH = 64;    // 最大的搜索深度

@@ -1,8 +1,7 @@
 #include"Search.h"
 #include"RESOURCE.H"
 #include"ChessBoard.h"
-
-
+#include"sort.h"
 S Search;
 
 // 设置最优move
@@ -61,9 +60,9 @@ int SearchQuiesc(int alpha, int beta) {
 	// 7. 逐一走这些走法，并进行递归
 	for (i = 0; i < movenum; ++i) {
 		int PieceCaptured;
-		if (pos.MakeMove(mvs[i],PieceCaptured)) {
+		if (pos.MakeMove(mvs[i])) {
 			value = -SearchQuiesc(-beta, -alpha);
-			pos.UndoMakeMove(mvs[i],PieceCaptured);
+			pos.UndoMakeMove();
 
 			// 8. 进行Alpha-Beta大小判断和截断
 			if (value > best) {		// 找到最佳值(但不能确定是Alpha、PV还是Beta走法)
@@ -330,7 +329,7 @@ static void SearchMain(clock_t time_limit) {
 			break; // ! 杀棋都是 nDistance - 	VALUE_MATE
 		}
 		// 超过一秒，就终止搜索
-		if (clock() - t > time_limit - 1000) { // ! 减掉一点点时间 以防万一 让有足够的时间生成bestmove字符串
+		if (clock() - t > time_limit - 10) { // ! 减掉一点点时间 以防万一 让有足够的时间生成bestmove字符串
 			break;
 		}
 	}
