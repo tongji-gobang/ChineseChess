@@ -16,7 +16,7 @@ int SearchQuiesc(int alpha, int beta) {
 	if (value != 0)
 		return pos.RepeatValue(value);	// 若重复则返回相应的重复分
 
-										// 2. 限制搜索深度
+	// 2. 限制搜索深度
 	if (pos.RootDistance == LIMIT_DEPTH)
 		return pos.Evaluate();
 
@@ -88,23 +88,23 @@ int ProbeHash(int vl_Alpha, int vl_Beta, int Depth, int &mv) {
 	if (hsh.vl > WIN_VALUE) {
 		if (hsh.vl < BAN_VALUE)			//低于长将判负的分值则不写入置换表
 			return MATE_VALUE_neg;			// 可能导致搜索的不稳定性，立刻退出，但最佳着法可能拿到
-		hsh.vl -= pos.RootDistance;		//>Ban_value 杀棋且不长将
+		hsh.vl -= pos.nDistance;		//>Ban_value 杀棋且不长将
 		bMate = TRUE;
 	}
 	else if (hsh.vl < -WIN_VALUE) {
 		if (hsh.vl > -BAN_VALUE) {
 			return MATE_VALUE_neg;     //负数类似
 		}
-		hsh.vl += pos.RootDistance;
+		hsh.vl += pos.nDistance;
 		bMate = TRUE;
 	}
 
 	if (hsh.Depth >= Depth || bMate) {			//满足深度限制或者为杀棋（如果是杀棋，那么不需要满足深度条件）
 		switch (hsh.Flag)
 		{
-		case HASH_BETA:		return (hsh.vl >= vl_Beta ? hsh.vl : MATE_VALUE_neg); break;
-		case HASH_ALPHA:	return (hsh.vl <= vl_Alpha ? hsh.vl : MATE_VALUE_neg); break;
-		default:			return hsh.vl; break;
+			case HASH_BETA:		return (hsh.vl >= vl_Beta ? hsh.vl : MATE_VALUE_neg); break;
+			case HASH_ALPHA:	return (hsh.vl <= vl_Alpha ? hsh.vl : MATE_VALUE_neg); break;
+			default:			return hsh.vl; break;
 		}
 	}
 
@@ -125,13 +125,13 @@ void RecordHash(int Flag, int vl, int Depth, int mv) {
 		if (mv == 0 && vl <= BAN_VALUE) {		// 可能导致搜索的不稳定性，并且没有最佳着法，立刻退出
 			return;
 		}
-		hsh.vl = vl + pos.RootDistance;			//>Ban_value 杀棋且不长将
+		hsh.vl = vl + pos.nDistance;			//>Ban_value 杀棋且不长将
 	}
 	else if (vl < -WIN_VALUE) {					// 同上
 		if (mv == 0 && vl >= -BAN_VALUE) {
 			return;
 		}
-		hsh.vl = vl - pos.RootDistance;
+		hsh.vl = vl - pos.nDistance;
 	}
 	else {
 		hsh.vl = vl;
