@@ -14,7 +14,7 @@ using namespace std;
 
 // RC4ÃÜÂëÁ÷Éú³ÉÆ÷
 class RC4Struct {
-private:
+public:
 	BYTE s[256];
 	int x, y;
 public:
@@ -41,7 +41,7 @@ public:
 };
 
 class Zobrist {
-private:
+public:
 	ZobristStruct Player;
 	ZobristStruct Table[14][256];
 public:
