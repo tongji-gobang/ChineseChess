@@ -49,9 +49,10 @@ int SearchQuiesc(int alpha, int beta) {
 
 	// 7. 逐一走这些走法，并进行递归
 	for (i = 0; i < movenum; ++i) {
-		if (pos.MakeMove(mvs[i])) {
+		int PieceCaptured;
+		if (pos.MakeMove(mvs[i],PieceCaptured)) {
 			value = -SearchQuiesc(-beta, -alpha);
-			pos.UndoMakeMove();
+			pos.UndoMakeMove(mvs[i],PieceCaptured);
 
 			// 8. 进行Alpha-Beta大小判断和截断
 			if (value > best) {		// 找到最佳值(但不能确定是Alpha、PV还是Beta走法)
@@ -88,14 +89,14 @@ int ProbeHash(int vl_Alpha, int vl_Beta, int Depth, int &mv) {
 	if (hsh.vl > WIN_VALUE) {
 		if (hsh.vl < BAN_VALUE)			//低于长将判负的分值则不写入置换表
 			return MATE_VALUE_neg;			// 可能导致搜索的不稳定性，立刻退出，但最佳着法可能拿到
-		hsh.vl -= pos.nDistance;		//>Ban_value 杀棋且不长将
+		hsh.vl -= pos.RootDistance;		//>Ban_value 杀棋且不长将
 		bMate = TRUE;
 	}
 	else if (hsh.vl < -WIN_VALUE) {
 		if (hsh.vl > -BAN_VALUE) {
 			return MATE_VALUE_neg;     //负数类似
 		}
-		hsh.vl += pos.nDistance;
+		hsh.vl += pos.RootDistance;
 		bMate = TRUE;
 	}
 
@@ -125,13 +126,13 @@ void RecordHash(int Flag, int vl, int Depth, int mv) {
 		if (mv == 0 && vl <= BAN_VALUE) {		// 可能导致搜索的不稳定性，并且没有最佳着法，立刻退出
 			return;
 		}
-		hsh.vl = vl + pos.nDistance;			//>Ban_value 杀棋且不长将
+		hsh.vl = vl + pos.RootDistance;			//>Ban_value 杀棋且不长将
 	}
 	else if (vl < -WIN_VALUE) {					// 同上
 		if (mv == 0 && vl >= -BAN_VALUE) {
 			return;
 		}
-		hsh.vl = vl - pos.nDistance;
+		hsh.vl = vl - pos.RootDistance;
 	}
 	else {
 		hsh.vl = vl;
@@ -140,3 +141,17 @@ void RecordHash(int Flag, int vl, int Depth, int mv) {
 	Search.HashTable[pos.zobr.dwKey & HASH_SIZE_end] = { Depth,Flag,hsh.vl,mv,pos.zobr.dwLock0,pos.zobr.dwLock1 };
 };
 
+// 求MVV/LVA值
+int MvvLva(int mv) {
+	return (cucMvvLva[pos.Board[DstPos(mv)]] << 3) - cucMvvLva[pos.Board[SrcPos(mv)]];
+}
+
+// qsort按MVV/LVA值排序的比较函数
+int CompareMvvLva(const void *p1, const void *p2) {
+	return MvvLva(*(int *)p2) - MvvLva(*(int *)p1);
+}
+
+// qsort历史表排序的比较函数
+int CompareHistory(const void *p1, const void *p2) {
+	return Search.nHistoryTable[*(int *)p2] - Search.nHistoryTable[*(int *)p1];
+}
