@@ -1,22 +1,26 @@
 #include<Windows.h>
+
 // 棋盘范围
 const int RANK_TOP = 3;
 const int RANK_BOTTOM = 12;
 const int FILE_LEFT = 3;
 const int FILE_RIGHT = 11;
 
-// 棋子编号
-const int PIECE_KING = 0;
-const int PIECE_ADVISOR = 1;
-const int PIECE_BISHOP = 2;
-const int PIECE_KNIGHT = 3;
-const int PIECE_ROOK = 4;
-const int PIECE_CANNON = 5;
-const int PIECE_PAWN = 6;
+/**
+ * description: 棋子编号
+ */
+enum PIECE
+{
+	KING,		// 将/帅
+	ADVISOR,	// 仕
+	BISHOP,		// 相/象
+	KNIGHT,		// 马
+	ROOK,		// 车
+	CANNON,		// 炮
+	PAWN		// 兵/卒
+};
 
-
-
-							   // 判断棋子是否在棋盘中的数组
+// 判断棋子是否在棋盘中的数组
 static const char ccInBoard[256] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
