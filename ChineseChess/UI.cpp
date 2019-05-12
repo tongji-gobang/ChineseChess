@@ -66,19 +66,19 @@ void DrawBoard(HDC hdc) {
 	for (x = FILE_LEFT; x <= FILE_RIGHT; x++) {
 		for (y = RANK_TOP; y <= RANK_BOTTOM; y++) {
 			if (Xqwl.bFlipped) {
-				xx = BOARD_EDGE + (FILE_FLIP(x) - FILE_LEFT) * SQUARE_SIZE;
-				yy = BOARD_EDGE + (RANK_FLIP(y) - RANK_TOP) * SQUARE_SIZE;
+				xx = BOARD_EDGE + (MirrorCol(x) - FILE_LEFT) * SQUARE_SIZE;
+				yy = BOARD_EDGE + (MirrorRow(y) - RANK_TOP) * SQUARE_SIZE;
 			}
 			else {
 				xx = BOARD_EDGE + (x - FILE_LEFT) * SQUARE_SIZE;
 				yy = BOARD_EDGE + (y - RANK_TOP) * SQUARE_SIZE;
 			}
-			sq = COORD_XY(x, y);
-			pc = pos.ucpcSquares[sq];
+			sq = PositionIndex(x, y);
+			pc = pos.Board[sq];
 			if (pc != 0) {
 				DrawTransBmp(hdc, hdcTmp, xx, yy, Xqwl.bmpPieces[pc]);
 			}
-			if (sq == Xqwl.sqSelected || sq == SRC(Xqwl.mvLast) || sq == DST(Xqwl.mvLast)) {
+			if (sq == Xqwl.sqSelected || sq == SrcPos(Xqwl.mvLast) || sq == DstPos(Xqwl.mvLast)) {
 				DrawTransBmp(hdc, hdcTmp, xx, yy, Xqwl.bmpSelected);
 			}
 		}
@@ -118,12 +118,12 @@ void MessageBoxMute(LPCSTR lpszText) {
 void DrawSquare(int sq, BOOL bSelected = FALSE) {
 	int sqFlipped, xx, yy, pc;
 
-	sqFlipped = Xqwl.bFlipped ? SQUARE_FLIP(sq) : sq;
-	xx = BOARD_EDGE + (FILE_X(sqFlipped) - FILE_LEFT) * SQUARE_SIZE;
-	yy = BOARD_EDGE + (RANK_Y(sqFlipped) - RANK_TOP) * SQUARE_SIZE;
+	sqFlipped = Xqwl.bFlipped ? CorrespondPos(sq) : sq;
+	xx = BOARD_EDGE + (MirrorCol(sqFlipped) - FILE_LEFT) * SQUARE_SIZE;
+	yy = BOARD_EDGE + (MirrorRow(sqFlipped) - RANK_TOP) * SQUARE_SIZE;
 	SelectObject(Xqwl.hdcTmp, Xqwl.bmpBoard);
 	BitBlt(Xqwl.hdc, xx, yy, SQUARE_SIZE, SQUARE_SIZE, Xqwl.hdcTmp, xx, yy, SRCCOPY);
-	pc = pos.ucpcSquares[sq];
+	pc = pos.Board[sq];
 	if (pc != 0) {
 		DrawTransBmp(Xqwl.hdc, Xqwl.hdcTmp, xx, yy, Xqwl.bmpPieces[pc]);
 	}
@@ -141,12 +141,12 @@ void DrawSquare(int sq, BOOL bSelected = FALSE) {
 	SetCursor((HCURSOR)LoadImage(NULL, IDC_ARROW, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED));
 	pos.MakeMove(Search.mvResult, pcCaptured);
 	// 清除上一步棋的选择标记
-	DrawSquare(SRC(Xqwl.mvLast));
-	DrawSquare(DST(Xqwl.mvLast));
+	DrawSquare(SrcPos(Xqwl.mvLast));
+	DrawSquare(DstPos(Xqwl.mvLast));
 	// 把电脑走的棋标记出来
 	Xqwl.mvLast = Search.mvResult;
-	DrawSquare(SRC(Xqwl.mvLast), DRAW_SELECTED);
-	DrawSquare(DST(Xqwl.mvLast), DRAW_SELECTED);
+	DrawSquare(SrcPos(Xqwl.mvLast), DRAW_SELECTED);
+	DrawSquare(DstPos(Xqwl.mvLast), DRAW_SELECTED);
 	if (pos.IsMate()) {
 		// 如果分出胜负，那么播放胜负的声音，并且弹出不带声音的提示框
 		PlayResWav(IDR_LOSS);
@@ -163,10 +163,10 @@ void DrawSquare(int sq, BOOL bSelected = FALSE) {
 	int pc, mv;
 	Xqwl.hdc = GetDC(Xqwl.hWnd);
 	Xqwl.hdcTmp = CreateCompatibleDC(Xqwl.hdc);
-	sq = Xqwl.bFlipped ? SQUARE_FLIP(sq) : sq;
-	pc = pos.ucpcSquares[sq];
+	sq = Xqwl.bFlipped ? CorrespondPos(sq) : sq;
+	pc = pos.Board[sq];
 
-	if ((pc & SIDE_TAG(pos.sdPlayer)) != 0) {
+	if ((pc & PieceFlag(pos.sdPlayer)) != 0) {
 		// 如果点击自己的子，那么直接选中该子
 		if (Xqwl.sqSelected != 0) {
 			DrawSquare(Xqwl.sqSelected);
@@ -174,15 +174,15 @@ void DrawSquare(int sq, BOOL bSelected = FALSE) {
 		Xqwl.sqSelected = sq;
 		DrawSquare(sq, DRAW_SELECTED);
 		if (Xqwl.mvLast != 0) {
-			DrawSquare(SRC(Xqwl.mvLast));
-			DrawSquare(DST(Xqwl.mvLast));
+			DrawSquare(SrcPos(Xqwl.mvLast));
+			DrawSquare(DstPos(Xqwl.mvLast));
 		}
 		PlayResWav(IDR_CLICK); // 播放点击的声音
 
 	}
 	else if (Xqwl.sqSelected != 0) {
 		// 如果点击的不是自己的子，但有子选中了(一定是自己的子)，那么走这个子
-		mv = MOVE(Xqwl.sqSelected, sq);
+		mv = Move(Xqwl.sqSelected, sq);
 		if (pos.LegalMove(mv)) {
 			if (pos.MakeMove(mv, pc)) {
 				Xqwl.mvLast = mv;
@@ -291,7 +291,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 		x = FILE_LEFT + (LOWORD(lParam) - BOARD_EDGE) / SQUARE_SIZE;
 		y = RANK_TOP + (HIWORD(lParam) - BOARD_EDGE) / SQUARE_SIZE;
 		if (x >= FILE_LEFT && x <= FILE_RIGHT && y >= RANK_TOP && y <= RANK_BOTTOM) {
-			ClickSquare(COORD_XY(x, y));
+			ClickSquare(PositionIndex(x, y));
 		}
 		break;
 		// 其他事件

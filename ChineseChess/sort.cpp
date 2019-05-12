@@ -1,5 +1,6 @@
 #include"sort.h"
 
+/*
 void SortStruct::Init(int mvHash_) { // 初始化，设定置换表走法和两个杀手走法
 	mvHash = mvHash_;
 	mvKiller1 = Search.mvKillers[pos.nDistance][0];
@@ -56,4 +57,72 @@ int SortStruct::Next(void) {
 	default:
 		return 0;
 	}
+}
+*/
+
+
+//历史表比较函数
+int compare(const void* a, const void*b) {
+	return *(int *)a - *(int *)b;
+}
+
+
+void SortStruct::Init(int mvHash_) {
+	this->mvHash = mvHash_;		//初始化哈希走法
+	this->mvKiller1 = Search.mvKillers[pos.RootDistance][0]; //从杀手表获取兄弟节点的杀手走法
+	this->mvKiller2 = Search.mvKillers[pos.RootDistance][1];
+	this->nPhase = PHASE_HASH;				//将最开始状态设置为获取哈希走法
+}
+
+//获取下一个走法
+int SortStruct::Next() {
+	int mv;
+
+	//若状态为取散列表走法
+	if (nPhase == PHASE_HASH) {
+		nPhase = PHASE_KILLER_1;	//将状态改为杀手走法1
+		if (mvHash)					//如果散列表走法可行 则返回该走法
+			return mvHash;
+	}
+
+	//若状态为取杀手走法1
+	if (nPhase == PHASE_KILLER_1) {
+		nPhase = PHASE_KILLER_2;										//将状态改为杀手走法2
+
+		if (mvKiller1&&mvKiller1!=mvHash&& pos.LegalMove(mvKiller1))	//判断杀手1走法是否为0且与散列表走法不同
+																		//且为合法走法
+			return mvKiller1;											//返回杀手1走法
+	}
+
+
+	//若状态为取杀手走法1
+	if (nPhase == PHASE_KILLER_2) {
+		nPhase = PHASE_GEN_MOVES;										//将状态改为生成所有走法状态
+
+		if (mvKiller2&&mvKiller2 != mvHash&& pos.LegalMove(mvKiller2))	//判断杀手2走法是否为0且与散列表走法不同
+																		//且为合法走法
+			return mvKiller1;											//返回杀手2走法
+	}
+
+
+	//若状态为生成所有走法
+	if (nPhase == PHASE_GEN_MOVES) {
+		nPhase = PHASE_REST;											//将状态更新为逐一获取走法状态
+
+		this->nGenMoves = pos.GenerateMoves(mvs);						//生成此局面所有走法
+		qsort(mvs, nGenMoves, sizeof(int), compare);					//对这些走法进行历史表排序
+		this->nIndex = 0;												//将采用走法的下标置0
+	}
+
+
+	//若状态为逐一获取走法状态
+	if (nPhase == PHASE_REST) {
+		while(nIndex < nGenMoves) {										//若采用走法下标小于生成的总走法数
+			if(mvs[nIndex] != mvHash&&mvs[nIndex]!=mvKiller1&&mvs[nIndex]!=mvKiller2)//若此走法不是散列表走法或杀手走法
+				return mvs[nIndex];										//返回此走法
+			nIndex++;													//将采用走法的下标加一
+		}
+	}
+
+	return 0;
 }

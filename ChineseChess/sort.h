@@ -3,11 +3,17 @@
 #include"ChessData.h"
 #include"ChessBoard.h"
 #include"Search.h"
-const int PHASE_HASH = 0;
-const int PHASE_KILLER_1 = 1;
-const int PHASE_KILLER_2 = 2;
-const int PHASE_GEN_MOVES = 3;
-const int PHASE_REST = 4;
+
+
+//此函数构造了一个状态机使得生成走法的时候能够最先生成最优走法
+//状态机的状态转移如下
+//取置换表走法-->取第一个杀手走法-->取第二个杀手走法-->生成该局面下所有走法并根据历史表排序-->逐一取排序后的走法
+
+const int PHASE_HASH = 0;			//置换表走法状态
+const int PHASE_KILLER_1 = 1;		//杀手走法一状态
+const int PHASE_KILLER_2 = 2;		//杀手走法二状态
+const int PHASE_GEN_MOVES = 3;		//生成局面下所有走法并排序
+const int PHASE_REST = 4;			//逐一取排序后的走法
 
 struct SortStruct {
 	int mvHash, mvKiller1, mvKiller2; // 置换表走法和两个杀手走法
@@ -20,10 +26,6 @@ struct SortStruct {
 };
 
 
-struct Sort
-{
-	int 
-};
 
 
 

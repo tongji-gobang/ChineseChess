@@ -24,7 +24,7 @@ public:
 };
 
 class ZobristStruct {
-private:
+public:
 	DWORD dwKey, dwLock0, dwLock1;
 public:
 	friend class PositionStruct;

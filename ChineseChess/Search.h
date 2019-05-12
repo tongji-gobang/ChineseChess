@@ -21,7 +21,7 @@ const int HASH_PV = 3;         // PV节点的置换表项
 							   // 增加的
 const int HASH_SIZE_end = HASH_SIZE - 1;		// 20位的1
 #define HistoryTable_SIZE 65536
-
+const int MATE_VALUE_neg = -MATE_VALUE;
 
 // 置换表项结构
 /*
@@ -63,6 +63,31 @@ static int SearchFull(int vlAlpha, int vlBeta, int nDepth);
 
 // 迭代加深搜索过程
 void SearchMain(void);
+
+// "GenerateMoves"参数，是否只产生吃子着法
+const bool GEN_CAPTURE = true;
+
+// "SearchFull"的参数，空着裁剪开关
+const bool NO_NULL = true;
+
+// MVV/LVA每种子力的价值
+static BYTE cucMvvLva[24] = {
+	0, 0, 0, 0, 0, 0, 0, 0,
+	5, 1, 1, 3, 4, 3, 2, 0,
+	5, 1, 1, 3, 4, 3, 2, 0
+};
+
+// 求MVV/LVA值
+int MvvLva(int mv);
+
+// "qsort"按MVV/LVA值排序的比较函数
+int CompareMvvLva(const void *p1, const void *p2);
+
+// "qsort"按历史表排序的比较函数
+static int CompareHistory(const void *p1, const void *p2);
+
+// 静态搜索
+int SearchQuiesc(int alpha, int beta);
 
 
 #pragma once
