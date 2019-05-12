@@ -24,6 +24,7 @@
     <ClCompile Include="Search.cpp" />
     <ClCompile Include="sort.cpp" />
     <ClCompile Include="UI.cpp" />
+    <ClCompile Include="Zobrist.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="XQWLIGHT.RC" />
@@ -35,6 +36,7 @@
     <ClInclude Include="sort.h" />
     <ClInclude Include="UI.h" />
     <ClInclude Include="RESOURCE.H" />
+    <ClInclude Include="Zobrist.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
