@@ -11,6 +11,7 @@ extern "C" {
 #endif
 // 与图形界面有关的全局变量
 #include"RESOURCE.H"
+
 struct UI{
 	HINSTANCE hInst;                              // 应用程序句柄实例
 	HWND hWnd;                                    // 主窗口句柄
