@@ -1,7 +1,22 @@
 
 #include	"Ucci.h"
 
-
+void debug_show_board()
+{
+	int i;
+	int j;
+	printf("\n");
+	for (i = 3; i < 13; i++) {
+		for (j = 3; j < 12; j++) {
+			if (0 != pos.Board[i * 16 + j]) {
+				printf("%-3d", pos.Board[i * 16 + j]);
+			}
+			else
+				printf("0  ");
+		}
+		printf("\n");
+	}
+}
 // 读取指令
 char * read_line()
 {
@@ -365,7 +380,7 @@ void process_fen(CommandInfo &comm) {
 		comm.nmv = 0; // 没有moves，说明对手吃子了，需要改变的棋子已经通过AddPiece实现了
 		return; ////若是moves后为空，那么无法进入if 文档要求实现
 	}
-		
+	debug_show_board();
 
 	// 换方
 	// 红为0 pos.sdPlayer

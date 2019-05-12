@@ -10,7 +10,7 @@
 #include	"ChessBoard.h"
 
 
-
+void debug_show_board();
 
 
 // 接收指令 按照规则word 实现这些：

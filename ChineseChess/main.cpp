@@ -3,25 +3,10 @@
 #include"ChessData.h"
 #include"Search.h"
 #include"Ucci.h"
-#define DEBUG_UCCI
+//#define DEBUG_UCCI
 
 
-void debug_show_board()
-{
-	int i;
-	int j;
-	printf("\n");
-	for (i = 3; i < 13; i++) {
-		for (j = 3; j < 12; j++) {
-			if (0 != pos.Board[i * 16 + j]) {
-				printf("%-3d", pos.Board[i * 16 + j]);
-			}
-			else
-				printf("0  ");
-		}
-		printf("\n");
-	}
-}
+
 
 
 #ifdef DEBUG_UCCI
