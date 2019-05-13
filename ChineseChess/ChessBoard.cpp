@@ -29,53 +29,64 @@ void PositionStruct::Startup()
     this->InitAllMoves();
 }
 
-// 搬一步棋的棋子
+/**
+ * description: 移动棋子
+ * parameter: 走法信息
+ * return: 被吃的棋子
+ */
 int PositionStruct::MovePiece(int move)
 {
     int src, dst, piece, pieceCaptured;
-    src = SrcPos(move);
-    dst = DstPos(move);
-    pieceCaptured = this->Board[dst];
-    if (pieceCaptured != 0){
-        this->DelPiece(dst, pieceCaptured);
-    }
-    piece = this->Board[src];
-    this->DelPiece(src, piece);
-    this->AddPiece(dst, piece);
+    src = SrcPos(move); // 获得该走法的起点
+    dst = DstPos(move); // 获得该走法的终点
+    pieceCaptured = this->Board[dst];   // 获取终点的棋子(即被吃的子)
+    if (pieceCaptured != 0)    // 如果有有棋子则吃掉(已检查过合理性，不会吃己方棋子)
+        this->DelPiece(dst, pieceCaptured); // 从棋盘上删除棋子
+    piece = this->Board[src];   // 获取起点的棋子
+    this->DelPiece(src, piece); // 删除起点棋子
+    this->AddPiece(dst, piece); // 将起点的棋子放到终点位置
     return pieceCaptured;
 }
 
-// 撤消搬一步棋的棋子
+/**
+ * description: 撤销前一步的走子
+ * parameter: move-走法，pieceCaptured-被吃的棋子
+ * return: void
+ */
 void PositionStruct::UndoMovePiece(int move, int pieceCaptured)
 {
     int src, dst, piece;
     src = SrcPos(move);
     dst = DstPos(move);
-    piece = Board[dst];
-    this->DelPiece(dst, piece);
-    this->AddPiece(src, piece);
-    if (pieceCaptured != 0){
-        AddPiece(dst, pieceCaptured);
-    }
+    piece = Board[dst];         // 获取终点的棋子
+    this->DelPiece(dst, piece); // 删除
+    this->AddPiece(src, piece); // 将该棋子放到起点
+    if (pieceCaptured != 0)
+        AddPiece(dst, pieceCaptured);   // 若被吃子，重置终点棋子
 }
 
-// 走一步棋
+/**
+ * description: 走一步棋
+ * parameter: move-走法，change-是否换到对方(默认为false)
+ * return: 若被将军返回false，否则true
+ */
 bool PositionStruct::MakeMove(int move, bool change)
 {
     int pieceCaptured;
-    DWORD dwKey;
+    DWORD key;        
 
-    dwKey = zobr.dwKey;
-    pieceCaptured = MovePiece(move);
-    if (Checked()){
+    key = zobr.dwKey;   // 记录当前局面的键值
+    pieceCaptured = MovePiece(move);    // 记录被吃子
+    if (Checked()){ // 被将军则撤销走子
         UndoMovePiece(move, pieceCaptured);
         return false;
     }
     if (change)
         this->ChangeSide();
-    this->AllMoves[this->MoveNum].push(move, pieceCaptured, Checked(), dwKey);
-    ++this->MoveNum;
-    ++this->RootDistance;
+    
+    // 记录到历史走法中, 含义为(当前局面要走的走法 执行走法后将被吃掉的子 此时对面是否被将军 未执行该走法前的局面键值)
+    this->AllMoves[this->MoveNum++].push(move, pieceCaptured, Checked(), key);
+    ++this->RootDistance;       // 已走的步数
     return true;
 }
 
