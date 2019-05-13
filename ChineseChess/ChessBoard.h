@@ -88,7 +88,7 @@ inline int Column(int posIndex)
 // 根据纵坐标和横坐标获得位置
 inline int PositionIndex(int col, int row)
 {
-    return (row << 4) + col;
+    return col + (row << 4);
 }
 
 // 将己方位置对应到对方位置
