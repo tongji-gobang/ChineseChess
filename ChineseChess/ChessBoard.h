@@ -66,53 +66,151 @@ public:
 	int IsRepetitive(int ReLoop = 1); // 检测重复局面
 	int RepeatValue(int ReNum);		  //重复局面的分数
 	bool NullOkay();				  // 是否可空着搜索
+
+	void Mirror(PositionStruct &posMirror);
 };
 
 extern PositionStruct pos;
 
 // 获得格子的横坐标
-int Row(int posIndex);
+inline int Row(int posIndex)
+{
+    return posIndex >> 4; // posIndex / 16, 对应二维棋盘的行
+}
+
 // 获得格子的纵坐标
-int Column(int posIndex);
+inline int Column(int posIndex)
+{
+    return posIndex & 15; // posIndex % 16, 对应二维棋盘的列
+}
+
 // 根据纵坐标和横坐标获得位置
-int PositionIndex(int col, int row);
+inline int PositionIndex(int col, int row)
+{
+    return (row << 4) + col;
+}
+
 // 将己方位置对应到对方位置
-int CorrespondPos(int posIndex);
+inline int CorrespondPos(int posIndex)
+{
+    return 254 - posIndex;
+}
+
 // 纵坐标水平镜像
-int MirrorCol(int col);
+inline int MirrorCol(int col)
+{
+    return 14 - col;
+}
+
 // 横坐标垂直镜像
-int MirrorRow(int row);
+inline int MirrorRow(int row)
+{
+    return 15 - row;
+}
+
 // 该位置的同行对应位置
-int MirrorPosRow(int posIndex);
+inline int MirrorPosRow(int posIndex)
+{
+    return PositionIndex(MirrorCol(Column(posIndex)), Row(posIndex));
+}
+
 // 该位置的同列的下一个位置(对双方来说均是前进一行)
-int NextPosCol(int posIndex, int player);
+inline int NextPosCol(int posIndex, int player)
+{
+    return posIndex - 16 + (player << 5);
+}
+
 // 将/帅的走法是否合理
-bool LegalMoveKing(int src, int dst);
+inline bool LegalMoveKing(int src, int dst)
+{
+    return LegalSpan[dst - src + 256] == 1;
+}
+
 // 仕的走法是否合理
-bool LegalMoveAdvisor(int src, int dst);
+inline bool LegalMoveAdvisor(int src, int dst)
+{
+    return LegalSpan[dst - src + 256] == 2;
+}
+
 // 相/象的走法是否合理
-bool LegalMoveBishop(int src, int dst);
+inline bool LegalMoveBishop(int src, int dst)
+{
+    return LegalSpan[dst - src + 256] == 3;
+}
+
 // 相(象)眼的位置
-int BishopCenter(int src, int dst);
+inline int BishopCenter(int src, int dst)
+{
+    return (src + dst) >> 1;
+}
+
 // 马腿的位置
-int KnightPinPos(int src, int dst);
+inline int KnightPinPos(int src, int dst)
+{
+    return src + KnightPin[dst - src + 256];
+}
+
 // 是否过河 true : 过河， false : 未过河
-bool CrossRiver(int posIndex, int player);
+inline bool CrossRiver(int posIndex, int player)
+{
+    // 以 128(0x80) 为界, 0-128 为 0 玩家， 128-256为 1 玩家
+    return (posIndex & 0x80) == (player << 7);
+}
+
 // 是否在河的同一边
-bool SameSide(int src, int dst);
+inline bool SameSide(int src, int dst)
+{
+    // 若在河的同一边，异或后 0x80 对应的bit位为 0
+    return ((src ^ dst) & 0x80) == 0;
+}
+
 // 是否在同一行
-bool SameRow(int src, int dst);
+inline bool SameRow(int src, int dst)
+{
+    // 若在同一行, 第 4-7 bit位一定相同
+    return ((src ^ dst) & 0xf0) == 0;
+}
+
 // 是否在同一列
-bool SameCol(int src, int dst);
+inline bool SameCol(int src, int dst)
+{
+    // 若在同一行, 第 0-3 bit位一定相同
+    return ((src ^ dst) & 0x0f) == 0;
+}
+
 // 获得红黑标记(红子是8，黑子是16)
-int PieceFlag(int player);
+inline int PieceFlag(int player)
+{
+    return 8 + (player << 3);
+}
+
 // 获得对方红黑标记
-int OppPieceFlag(int player);
+inline int OppPieceFlag(int player)
+{
+    return 16 - (player << 3);
+}
+
 // 获得走法的起点
-int SrcPos(int move);
+inline int SrcPos(int move)
+{
+    // move % 256
+    return move & 255;
+}
 // 获得走法的终点
-int DstPos(int move);
+inline int DstPos(int move)
+{
+    // move / 256
+    return move >> 8;
+}
+
 // 根据起点和终点获得走法
-int Move(int src, int dst);
+inline int Move(int src, int dst)
+{
+    return src + (dst << 8);
+}
+
 // 走法水平镜像
-int MirrorMove(int move);
+inline int MirrorMove(int move)
+{
+    return Move(MirrorPosRow(SrcPos(move)), MirrorPosRow(DstPos(move)));
+}
