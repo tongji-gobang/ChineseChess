@@ -5,17 +5,27 @@
 
 PositionStruct pos;
 
-// 初始化棋盘
+/**
+ * description: 初始化棋盘
+ * parameter: void
+ * return: void
+ */
 void PositionStruct::Startup()
 {
     int posIndex, piece;
+    // 由于需要计算初始局面的zobrist键值，所以必须清空棋盘
     ClearBoard();
-    for (posIndex = 0; posIndex < 256; ++posIndex){
+    // 将棋子加入棋盘
+    const int begPos = PositionIndex(FILE_LEFT, RANK_TOP);
+    const int endPos = PositionIndex(FILE_RIGHT, RANK_BOTTOM);
+    for (posIndex = begPos; posIndex <= endPos; ++posIndex){
         piece = StartupBoard[posIndex];
         if (piece != 0){
+            // 非空棋子加入，在addpiece中计算zobrist键值
             AddPiece(posIndex, piece);
         }
     }
+    // 初始化记录历史走法的数组
     this->InitAllMoves();
 }
 

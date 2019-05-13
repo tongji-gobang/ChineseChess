@@ -2,6 +2,7 @@
 #include "RESOURCE.H"
 #include "Zobrist.h"
 #include "search.h"
+#include "ChessData.h"
 
 #ifdef __cplusplus
 extern "C"
