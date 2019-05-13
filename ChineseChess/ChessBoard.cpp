@@ -10,11 +10,9 @@ void PositionStruct::Startup()
 {
     int posIndex, piece;
     ClearBoard();
-    for (posIndex = 0; posIndex < 256; ++posIndex)
-    {
+    for (posIndex = 0; posIndex < 256; ++posIndex){
         piece = StartupBoard[posIndex];
-        if (piece != 0)
-        {
+        if (piece != 0){
             AddPiece(posIndex, piece);
         }
     }
@@ -28,8 +26,7 @@ int PositionStruct::MovePiece(int move)
     src = SrcPos(move);
     dst = DstPos(move);
     pieceCaptured = this->Board[dst];
-    if (pieceCaptured != 0)
-    {
+    if (pieceCaptured != 0){
         this->DelPiece(dst, pieceCaptured);
     }
     piece = this->Board[src];
@@ -47,8 +44,7 @@ void PositionStruct::UndoMovePiece(int move, int pieceCaptured)
     piece = Board[dst];
     this->DelPiece(dst, piece);
     this->AddPiece(src, piece);
-    if (pieceCaptured != 0)
-    {
+    if (pieceCaptured != 0){
         AddPiece(dst, pieceCaptured);
     }
 }
@@ -61,8 +57,7 @@ bool PositionStruct::MakeMove(int move, bool change)
 
     dwKey = zobr.dwKey;
     pieceCaptured = MovePiece(move);
-    if (Checked())
-    {
+    if (Checked()){
         UndoMovePiece(move, pieceCaptured);
         return false;
     }
@@ -108,13 +103,11 @@ void PositionStruct::AddPiece(int position, int piece)
 {
     this->Board[position] = piece;
 
-    if (piece >= 16)
-    {
+    if (piece >= 16){
         this->valueBlack += PiecePosValue[piece - 16][CorrespondPos(position)];
         zobr ^= Zrand.Table[piece - 9][position];
     }
-    else
-    {
+    else{
         valueRed += PiecePosValue[piece - 8][position];
         zobr ^= Zrand.Table[piece - 8][position];
     }
@@ -123,13 +116,11 @@ void PositionStruct::AddPiece(int position, int piece)
 void PositionStruct::DelPiece(int position, int piece)
 {
     this->Board[position] = 0;
-    if (piece >= 16)
-    {
+    if (piece >= 16){
         this->valueBlack -= PiecePosValue[piece - 16][CorrespondPos(position)];
         zobr ^= Zrand.Table[piece - 9][position];
     }
-    else
-    {
+    else{
         valueRed -= PiecePosValue[piece - 8][position];
         zobr ^= Zrand.Table[piece - 8][position];
     }
@@ -205,109 +196,81 @@ int PositionStruct::GenerateMoves(int *moves, bool OnlyCapture) const
 
             // 1. 找到一个本方棋子，再做以下判断：
             pieceSrc = this->Board[src];
-            if ((pieceSrc & SelfSide) == 0)
-            {
+            if ((pieceSrc & SelfSide) == 0){
                 continue;
             }
 
             // 2. 根据棋子确定走法
-            switch (pieceSrc - SelfSide)
-            {
+            switch (pieceSrc - SelfSide){
             case KING:
-                for (int i = 0; i < 4; i++)
-                {
+                for (int i = 0; i < 4; i++){
                     dst = src + KingStep[i];
-                    if (!InFort[dst])
-                    {
+                    if (!InFort[dst]){
                         continue;
                     }
                     pieceDst = this->Board[dst];
-                    if (OnlyCapture ? (pieceDst & OppSide) != 0 : (pieceDst & SelfSide) == 0)
-                    {
-                        moves[NumGenerate] = Move(src, dst);
-                        NumGenerate++;
+                    if (OnlyCapture ? (pieceDst & OppSide) != 0 : (pieceDst & SelfSide) == 0){
+                        moves[NumGenerate++] = Move(src, dst);
                     }
                 }
                 break;
             case ADVISOR:
-                for (int i = 0; i < 4; i++)
-                {
+                for (int i = 0; i < 4; i++){
                     dst = src + AdvisorStep[i];
-                    if (!InFort[dst])
-                    {
+                    if (!InFort[dst]){
                         continue;
                     }
                     pieceDst = this->Board[dst];
-                    if (OnlyCapture ? (pieceDst & OppSide) != 0 : (pieceDst & SelfSide) == 0)
-                    {
-                        moves[NumGenerate] = Move(src, dst);
-                        NumGenerate++;
+                    if (OnlyCapture ? (pieceDst & OppSide) != 0 : (pieceDst & SelfSide) == 0){
+                        moves[NumGenerate++] = Move(src, dst);
                     }
                 }
                 break;
             case BISHOP:
-                for (int i = 0; i < 4; i++)
-                {
+                for (int i = 0; i < 4; i++){
                     dst = src + AdvisorStep[i];
-                    if (!(InBoard[dst] && !CrossRiver(dst, this->player) && this->Board[dst] == 0))
-                    {
+                    if (!(InBoard[dst] && !CrossRiver(dst, this->player) && this->Board[dst] == 0)){
                         continue;
                     }
                     dst += AdvisorStep[i];
                     pieceDst = this->Board[dst];
-                    if (OnlyCapture ? (pieceDst & OppSide) != 0 : (pieceDst & SelfSide) == 0)
-                    {
-                        moves[NumGenerate] = Move(src, dst);
-                        NumGenerate++;
+                    if (OnlyCapture ? (pieceDst & OppSide) != 0 : (pieceDst & SelfSide) == 0){
+                        moves[NumGenerate++] = Move(src, dst);
                     }
                 }
                 break;
             case KNIGHT:
-                for (int i = 0; i < 4; i++)
-                {
+                for (int i = 0; i < 4; i++){
                     dst = src + KingStep[i];
-                    if (this->Board[dst] != 0)
-                    {
+                    if (this->Board[dst] != 0){
                         continue;
                     }
-                    for (int j = 0; j < 2; j++)
-                    {
+                    for (int j = 0; j < 2; j++){
                         dst = src + KnightStep[i][j];
-                        if (!InBoard[dst])
-                        {
+                        if (!InBoard[dst]){
                             continue;
                         }
                         pieceDst = this->Board[dst];
-                        if (OnlyCapture ? (pieceDst & OppSide) != 0 : (pieceDst & SelfSide) == 0)
-                        {
-                            moves[NumGenerate] = Move(src, dst);
-                            NumGenerate++;
+                        if (OnlyCapture ? (pieceDst & OppSide) != 0 : (pieceDst & SelfSide) == 0){
+                            moves[NumGenerate++] = Move(src, dst);
                         }
                     }
                 }
                 break;
             case ROOK:
-                for (int i = 0; i < 4; i++)
-                {
+                for (int i = 0; i < 4; i++){
                     int delta = KingStep[i];
                     dst = src + delta;
-                    while (InBoard[dst])
-                    {
+                    while (InBoard[dst]){
                         pieceDst = this->Board[dst];
-                        if (pieceDst == 0)
-                        {
-                            if (!OnlyCapture)
-                            {
-                                moves[NumGenerate] = Move(src, dst);
-                                NumGenerate++;
+                        if (pieceDst == 0){
+                            if (!OnlyCapture){
+                                moves[NumGenerate++] = Move(src, dst);
                             }
                         }
-                        else
-                        {
-                            if ((pieceDst & OppSide) != 0)
-                            {
-                                moves[NumGenerate] = Move(src, dst);
-                                NumGenerate++;
+                        else{
+                            if ((pieceDst & OppSide) != 0){
+                                moves[NumGenerate++] = Move(src, dst);
                             }
                             break;
                         }
@@ -316,37 +279,27 @@ int PositionStruct::GenerateMoves(int *moves, bool OnlyCapture) const
                 }
                 break;
             case CANNON:
-                for (int i = 0; i < 4; i++)
-                {
+                for (int i = 0; i < 4; i++){
                     int delta = KingStep[i];
                     dst = src + delta;
-                    while (InBoard[dst])
-                    {
+                    while (InBoard[dst]){
                         pieceDst = this->Board[dst];
-                        if (pieceDst == 0)
-                        {
-                            if (!OnlyCapture)
-                            {
-                                moves[NumGenerate] = Move(src, dst);
-                                NumGenerate++;
+                        if (pieceDst == 0){
+                            if (!OnlyCapture){
+                                moves[NumGenerate++] = Move(src, dst);
                             }
                         }
-                        else
-                        {
+                        else{
                             break;
                         }
                         dst += delta;
                     }
                     dst += delta;
-                    while (InBoard[dst])
-                    {
+                    while (InBoard[dst]){
                         pieceDst = this->Board[dst];
-                        if (pieceDst != 0)
-                        {
-                            if ((pieceDst & OppSide) != 0)
-                            {
-                                moves[NumGenerate] = Move(src, dst);
-                                NumGenerate++;
+                        if (pieceDst != 0){
+                            if ((pieceDst & OppSide) != 0){
+                                moves[NumGenerate++] = Move(src, dst);
                             }
                             break;
                         }
@@ -356,25 +309,19 @@ int PositionStruct::GenerateMoves(int *moves, bool OnlyCapture) const
                 break;
             case PAWN:
                 dst = NextPosCol(src, this->player);
-                if (InBoard[dst])
-                {
+                if (InBoard[dst]){
                     pieceDst = this->Board[dst];
-                    if (OnlyCapture ? (pieceDst & OppSide) != 0 : (pieceDst & SelfSide) == 0)
-                    {
+                    if (OnlyCapture ? (pieceDst & OppSide) != 0 : (pieceDst & SelfSide) == 0){
                         moves[NumGenerate] = Move(src, dst);
                         NumGenerate++;
                     }
                 }
-                if (CrossRiver(src, this->player))
-                {
-                    for (int delta = -1; delta <= 1; delta += 2)
-                    {
+                if (CrossRiver(src, this->player)){
+                    for (int delta = -1; delta <= 1; delta += 2){
                         dst = src + delta;
-                        if (InBoard[dst])
-                        {
+                        if (InBoard[dst]){
                             pieceDst = this->Board[dst];
-                            if (OnlyCapture ? (pieceDst & OppSide) != 0 : (pieceDst & SelfSide) == 0)
-                            {
+                            if (OnlyCapture ? (pieceDst & OppSide) != 0 : (pieceDst & SelfSide) == 0){
                                 moves[NumGenerate] = Move(src, dst);
                                 NumGenerate++;
                             }
@@ -399,22 +346,19 @@ bool PositionStruct::LegalMove(int mv) const
     src = SrcPos(mv);
     pieceSrc = this->Board[src];
     SelfSide = PieceFlag(this->player);
-    if ((pieceSrc & SelfSide) == 0)
-    {
+    if ((pieceSrc & SelfSide) == 0){
         return false;
     }
 
     // 2. 判断目标格是否有自己的棋子
     dst = DstPos(mv);
     pieceDst = this->Board[dst];
-    if ((pieceDst & SelfSide) != 0)
-    {
+    if ((pieceDst & SelfSide) != 0){
         return false;
     }
 
     // 3. 根据棋子的类型检查走法是否合理
-    switch (pieceSrc - SelfSide)
-    {
+    switch (pieceSrc - SelfSide){
     case KING:
         return InFort[dst] && LegalMoveKing(src, dst);
     case ADVISOR:
@@ -427,43 +371,34 @@ bool PositionStruct::LegalMove(int mv) const
         return pin != src && this->Board[pin] == 0;
     case ROOK:
     case CANNON:
-        if (SameRow(src, dst))
-        {
+        if (SameRow(src, dst)){
             delta = (dst < src ? -1 : 1);
         }
-        else if (SameCol(src, dst))
-        {
+        else if (SameCol(src, dst)){
             delta = (dst < src ? -16 : 16);
         }
-        else
-        {
+        else{
             return false;
         }
         pin = src + delta;
-        while (pin != dst && this->Board[pin] == 0)
-        {
+        while (pin != dst && this->Board[pin] == 0){
             pin += delta;
         }
-        if (pin == dst)
-        {
+        if (pin == dst){
             return pieceDst == 0 || pieceSrc - SelfSide == ROOK;
         }
-        else if (pieceDst != 0 && pieceSrc - SelfSide == CANNON)
-        {
+        else if (pieceDst != 0 && pieceSrc - SelfSide == CANNON){
             pin += delta;
-            while (pin != dst && this->Board[pin] == 0)
-            {
+            while (pin != dst && this->Board[pin] == 0){
                 pin += delta;
             }
             return pin == dst;
         }
-        else
-        {
+        else{
             return false;
         }
     case PAWN:
-        if (CrossRiver(dst, this->player) && (dst == src - 1 || dst == src + 1))
-        {
+        if (CrossRiver(dst, this->player) && (dst == src - 1 || dst == src + 1)){
             return true;
         }
         return dst == NextPosCol(src, this->player);
@@ -486,10 +421,8 @@ bool PositionStruct::Checked() const
     const int begFortCol = FILE_LEFT + 3;
     const int endFortCol = FILE_RIGHT - 3;
 
-    for (int row = begFortRow; row <= endFortRow; ++row)
-    {
-        for (int col = begFortCol; col <= endFortCol; ++col)
-        {
+    for (int row = begFortRow; row <= endFortRow; ++row){
+        for (int col = begFortCol; col <= endFortCol; ++col){
             src = PositionIndex(col, row);
 
             if (this->Board[src] != SelfSide + KING)
@@ -505,34 +438,26 @@ bool PositionStruct::Checked() const
                 return true;
 
             // 2. 判断是否被对方的马将军(以仕(士)的步长当作马腿)
-            for (int i = 0; i < 4; i++)
-            {
-                if (this->Board[src + AdvisorStep[i]])
-                {
+            for (int i = 0; i < 4; i++){
+                if (this->Board[src + AdvisorStep[i]]){
                     continue;
                 }
-                for (int j = 0; j < 2; j++)
-                {
+                for (int j = 0; j < 2; j++){
                     pieceDst = this->Board[src + KnightCheckStep[i][j]];
-                    if (pieceDst == OppSide + KNIGHT)
-                    {
+                    if (pieceDst == OppSide + KNIGHT){
                         return TRUE;
                     }
                 }
             }
 
             // 3. 判断是否被对方的车或炮将军(包括将帅对脸)
-            for (int i = 0; i < 4; i++)
-            {
+            for (int i = 0; i < 4; i++){
                 int delta = KingStep[i];
                 dst = src + delta;
-                while (InBoard[dst])
-                {
+                while (InBoard[dst]){
                     pieceDst = this->Board[dst];
-                    if (pieceDst != 0)
-                    {
-                        if (pieceDst == OppSide + ROOK || pieceDst == OppSide + KING)
-                        {
+                    if (pieceDst != 0){
+                        if (pieceDst == OppSide + ROOK || pieceDst == OppSide + KING){
                             return true;
                         }
                         break;
@@ -540,13 +465,10 @@ bool PositionStruct::Checked() const
                     dst += delta;
                 }
                 dst += delta;
-                while (InBoard[dst])
-                {
+                while (InBoard[dst]){
                     int pieceDst = this->Board[dst];
-                    if (pieceDst != 0)
-                    {
-                        if (pieceDst == OppSide + CANNON)
-                        {
+                    if (pieceDst != 0){
+                        if (pieceDst == OppSide + CANNON){
                             return true;
                         }
                         break;
@@ -567,16 +489,13 @@ bool PositionStruct::IsMate()
     int moves[MAX_GEN_MOVES];
 
     nGenMoveNum = GenerateMoves(moves, false);
-    for (i = 0; i < nGenMoveNum; i++)
-    {
+    for (i = 0; i < nGenMoveNum; i++){
         pcCaptured = MovePiece(moves[i]);
-        if (!Checked())
-        {
+        if (!Checked()){
             UndoMovePiece(moves[i], pcCaptured);
             return false;
         }
-        else
-        {
+        else{
             UndoMovePiece(moves[i], pcCaptured);
         }
     }
@@ -593,22 +512,17 @@ int PositionStruct::IsRepetitive(int ReLoop)
     PerpetualCheck = true;
     OppPerpetualCheck = true;
     ptrMoves = this->AllMoves + this->MoveNum - 1;
-    while (ptrMoves->thisMove != 0 && ptrMoves->pieceCaptured == 0)
-    {
-        if (SelfSide)
-        {
+    while (ptrMoves->thisMove != 0 && ptrMoves->pieceCaptured == 0){
+        if (SelfSide){
             PerpetualCheck = PerpetualCheck && ptrMoves->Check;
-            if (ptrMoves->thisKey == zobr.dwKey)
-            {
+            if (ptrMoves->thisKey == zobr.dwKey){
                 --ReLoop;
-                if (ReLoop == 0)
-                {
+                if (ReLoop == 0){
                     return 1 + (PerpetualCheck ? 2 : 0) + (OppPerpetualCheck ? 4 : 0);
                 }
             }
         }
-        else
-        {
+        else{
             OppPerpetualCheck = OppPerpetualCheck && ptrMoves->Check;
         }
         SelfSide = !SelfSide;
@@ -621,16 +535,13 @@ void PositionStruct::Mirror(PositionStruct &posMirror)
 {
     int posIndex, piece;
     posMirror.ClearBoard();
-    for (posIndex = 0; posIndex < 256; posIndex++)
-    {
+    for (posIndex = 0; posIndex < 256; posIndex++){
         piece = this->Board[posIndex];
-        if (piece)
-        {
+        if (piece){
             posMirror.AddPiece(MirrorPosRow(posIndex), piece);
         }
     }
-    if (this->player)
-    {
+    if (this->player){
         posMirror.ChangeSide();
     }
     posMirror.InitAllMoves();
