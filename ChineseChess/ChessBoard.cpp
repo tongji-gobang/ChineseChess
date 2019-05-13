@@ -573,14 +573,14 @@ bool PositionStruct::IsMate()
         if (!Checked())
         {
             UndoMovePiece(moves[i], pcCaptured);
-            return FALSE;
+            return false;
         }
         else
         {
             UndoMovePiece(moves[i], pcCaptured);
         }
     }
-    return TRUE;
+    return true;
 }
 
 // 检测重复局面
