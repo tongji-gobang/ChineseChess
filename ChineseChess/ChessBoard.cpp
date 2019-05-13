@@ -285,7 +285,7 @@ void PositionStruct::MoveNull()
     DWORD key;
     key = this->zobr.dwKey;
     this->ChangeSide();
-    this->AllMoves[this->MoveNum - 1].push(0, 0, false, key);
+    this->AllMoves[this->MoveNum].push(0, 0, false, key);
     ++this->MoveNum;
     ++this->RootDistance;
 }
