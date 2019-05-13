@@ -83,7 +83,7 @@ ZobristStruct ZobristStruct::operator^(const ZobristStruct &zobr)
 }
 
 // 相当于原代码中的Xor
-ZobristStruct ZobristStruct::operator^=(const ZobristStruct &zobr)
+ZobristStruct& ZobristStruct::operator^=(const ZobristStruct &zobr)
 {
 	dwKey ^= zobr.dwKey;
 	dwLock0 ^= zobr.dwLock0;

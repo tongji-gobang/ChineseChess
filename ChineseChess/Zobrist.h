@@ -34,7 +34,7 @@ public:
 	void InitRC4(RC4Struct &rc4);// 用密码流填充Zobrist
 
 	ZobristStruct operator^(const ZobristStruct &zobr);// Zobrist结构的异或运算
-	ZobristStruct operator^=(const ZobristStruct &zobr);// 相当于原代码中的Xor
+	ZobristStruct& operator^=(const ZobristStruct &zobr);// 相当于原代码中的Xor
 #ifdef DEBUG
 	friend ostream& operator<< (ostream &out, ZobristStruct &zobr);
 #endif // DEBUG
