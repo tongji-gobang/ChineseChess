@@ -66,6 +66,9 @@ public:
 	int IsRepetitive(int ReLoop = 1); // 检测重复局面
 	int RepeatValue(int ReNum);		  //重复局面的分数
 	bool NullOkay();				  // 是否可空着搜索
+
+	void Mirror(PositionStruct &posMirror);
+
 };
 
 extern PositionStruct pos;

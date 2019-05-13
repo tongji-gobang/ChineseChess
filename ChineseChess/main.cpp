@@ -91,7 +91,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// 初始化全局变量
 	Xqwl.hInst = hInstance;
 	Xqwl.bFlipped = FALSE;
+	LoadBook();
 	Startup();
+
 
 	// 装入图片
 	Xqwl.bmpBoard = LoadResBmp(IDB_BOARD);

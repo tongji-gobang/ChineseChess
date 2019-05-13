@@ -721,6 +721,18 @@ void SearchMain(clock_t time_limit) {
 	pos.RootDistance = 0; // 初始步数
 
 
+
+	Search.mvResult = SearchBook();
+	if (Search.mvResult != 0) {
+		pos.MakeMove(Search.mvResult);
+		if (pos.IsRepetitive(3) == 0) {
+			pos.UndoMakeMove();
+			return;
+		}
+		pos.UndoMakeMove();
+	}
+
+
 						  // 检查是否只有唯一走法
 	vl = 0;
 	n_mvs = pos.GenerateMoves(mvs);

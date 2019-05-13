@@ -559,31 +559,24 @@ bool PositionStruct::Checked() const {
     // 找到棋盘上的帅(将)，再做以下判断：
 
     for (src = 0; src < 256; src++) {
-        if (this->Board[src] != SelfSide + KING) {
+        //if (this->Board[src] != SelfSide + KING) 
+		if (this->Board[src] != SelfSide + KING)
             continue;
-        }
 
         // 1. 判断是否被对方的兵(卒)将军
         if (this->Board[NextPosCol(src, this->player)] == OppSide + PAWN) {
             return TRUE;
         }
-        for (delta = -1; delta <= 1; delta += 2) {
-            if (this->Board[src + delta] == OppSide + PAWN) {
-                return TRUE;
-            }
-        }
+       
+       if (this->Board[src - 1 ] == OppSide + PAWN)  return TRUE;
+	   if (this->Board[src + 1] == OppSide + PAWN)  return TRUE;
+   
 
         // 2. 判断是否被对方的马将军(以仕(士)的步长当作马腿)
         for (i = 0; i < 4; i++) {
-            if (this->Board[src + AdvisorStep[i]] != 0) {
-                continue;
-            }
-            for (j = 0; j < 2; j++) {
-                pieceDst = this->Board[src + KnightCheckStep[i][j]];
-                if (pieceDst == OppSide + KNIGHT) {
-                    return TRUE;
-                }
-            }
+            if (this->Board[src + AdvisorStep[i]] != 0)  continue;
+            if (this->Board[src + KnightCheckStep[i][0]] == OppSide + KNIGHT)    return TRUE;
+			if (this->Board[src + KnightCheckStep[i][1]] == OppSide + KNIGHT)    return TRUE;
         }
 
         // 3. 判断是否被对方的车或炮将军(包括将帅对脸)
@@ -602,7 +595,7 @@ bool PositionStruct::Checked() const {
             }
             dst += delta;
             while (InBoard[dst]) {
-                int pieceDst = this->Board[dst];
+                pieceDst = this->Board[dst];
                 if (pieceDst != 0) {
                     if (pieceDst == OppSide + CANNON) {
                         return TRUE;
@@ -664,4 +657,24 @@ int PositionStruct::IsRepetitive(int ReLoop)
         ptrMoves--;
     }
     return 0;
+}
+
+
+
+
+
+// 对局面镜像
+void PositionStruct::Mirror(PositionStruct &posMirror) {
+	int sq, pc;
+	posMirror.ClearBoard();
+	for (sq = 0; sq < 256; sq++) {
+		pc = Board[sq];
+		if (pc != 0) {
+			posMirror.AddPiece(MirrorPosRow(sq), pc);
+		}
+	}
+	if (player == 1) {
+		posMirror.ChangeSide();
+	}
+	posMirror.InitAllMoves();
 }

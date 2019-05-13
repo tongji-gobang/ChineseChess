@@ -3,6 +3,8 @@
 //#inlcude "BOOKitem"
 #include <Windows.h>
 #include <time.h>
+#include "book.h"
+
 const int MAX_GEN_MOVES = 128; // 最大的生成走法数
 const int MAX_MOVES = 256;     // 最大的历史走法数
 const int LIMIT_DEPTH = 64;    // 最大的搜索深度
@@ -46,9 +48,9 @@ struct S{
 	int mvResult;             // 电脑走的棋
 	int nHistoryTable[HistoryTable_SIZE]; // 历史表
 	int mvKillers[LIMIT_DEPTH][2]; // 杀手走法表
-	HashItem HashTable[HASH_SIZE]; // 置换表
-								   //int BookSize;                 // 开局库大小
-								   //BookItem BookTable[BOOK_SIZE]; // 开局库 (暂时不实现开局库相关)
+	HashItem HashTable[HASH_SIZE]; // 置换表		
+	int BookSize;                 // 开局库大小
+	BookItem BookTable[BOOK_SIZE]; // 开局库
 
 };
 extern S Search;
