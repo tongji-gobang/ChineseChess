@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="book.cpp" />
     <ClCompile Include="ChessBoard.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Search.cpp" />
@@ -31,6 +32,7 @@
     <ResourceCompile Include="XQWLIGHT.RC" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="book.h" />
     <ClInclude Include="ChessBoard.h" />
     <ClInclude Include="ChessData.h" />
     <ClInclude Include="Search.h" />
