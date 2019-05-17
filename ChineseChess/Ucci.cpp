@@ -316,17 +316,27 @@ void process_fen(CommandInfo &comm) {
 		}
 		p++;
 	}
-#ifdef DEBUG
-	printf("\n");
-#endif // DEBUG
+
 	p += 1;
 	//pos.sdPlayer = (*p == 'w' ? 0 : 1);
+#ifdef DEBUG
 	printf("<%d>\n", pos.player);
-	 // (" - - 0 1 ") 
+#endif // DEBUG
+	
+	
 	if (pos.player == (*p == 'b' ? 0 : 1)) {
 		pos.ChangeSide();
 	}
-	p += 10;
+	// ("w - - 0 1 ") 
+	p += 6; // 越过空格和-
+			//防止数字不止一位
+	while (*p >= '0' && *p <= '9')
+		p++;
+	p++;
+	while (*p >= '0' && *p <= '9')
+		p++;
+	p++;
+	//p += 10;
 
 #ifdef DEBUG
 	printf("%s\n", p);  // 确认指针加得正确
@@ -380,7 +390,7 @@ void process_fen(CommandInfo &comm) {
 		comm.nmv = 0; // 没有moves，说明对手吃子了，需要改变的棋子已经通过AddPiece实现了
 		return; ////若是moves后为空，那么无法进入if 文档要求实现
 	}
-	debug_show_board();
+	
 
 	// 换方
 	// 红为0 pos.sdPlayer
@@ -390,7 +400,10 @@ void process_fen(CommandInfo &comm) {
 	//else if ((pos.sdPlayer == 1) && (comm.nmv & 1) == 1) {
 	//	pos.sdPlayer = 0;
 	//}
+#ifdef DEBUG
+	debug_show_board();
 	printf("[%d]", pos.player);
+#endif // DEBUG
 }
 
 /*

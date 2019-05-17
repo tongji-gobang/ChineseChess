@@ -138,7 +138,7 @@ static void ResponseMove(void) {
     int vlRep;
     // 电脑走一步棋
     SetCursor((HCURSOR)LoadImage(NULL, IDC_WAIT, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED));
-    SearchMain(1000);
+	TopSearch(1000);
     SetCursor((HCURSOR)LoadImage(NULL, IDC_ARROW, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED));
     pos.MakeMove(Search.mvResult);
     // 清除上一步棋的选择标记

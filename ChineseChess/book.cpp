@@ -36,6 +36,7 @@ int SearchBook() {
 
 	// 1. 如果没有开局库，则立即返回
 	if (Search.BookSize == 0) {
+		
 		return 0;
 	}
 	// 2. 搜索当前局面

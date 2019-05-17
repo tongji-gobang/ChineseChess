@@ -4,14 +4,13 @@
 #include"Search.h"
 #include"Ucci.h"
 //#define DEBUG_UCCI
-
-
-
+//#define DEBUG
 
 
 #ifdef DEBUG_UCCI
 int main()
 {
+	
 	CommandEnum IdleComm;
 	CommandInfo comm;
 	int mv_rst = 0;
@@ -28,7 +27,7 @@ int main()
 		fflush(stdout);
 		printf("ucciok\n");
 		fflush(stdout);
-
+		LoadBook();		// 加载开局库
 		while (1) {
 			IdleComm = idle_line(comm);
 			switch (IdleComm) {
@@ -49,9 +48,12 @@ int main()
 					break;
 				case CommandGoTime:
 					//ThisSearch.Search(Command.Search.DepthTime.Depth, 2/* Set by User */);
-					SearchMain(1000);
+					TopSearch(comm.go_time);
 					mv_rst = Search.mvResult;
+#ifdef DEBUG
+					printf("go time: %d\n", comm.go_time);
 					printf("[!!%x!!]", mv_rst);
+#endif // DEBUG
 					if (mv_rst != 0) {
 
 						long rst_str = best_move2str(mv_rst);
@@ -76,7 +78,10 @@ int main()
 		fflush(stdout);
 		return 0;
 	}
+	
+#ifdef DEBUG
 	printf("return");
+#endif // DEBUG
 	return 0;
 }
 #else
@@ -85,8 +90,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int i;
 	MSG msg;
 	WNDCLASSEX wce;
-
-
 
 	// 初始化全局变量
 	Xqwl.hInst = hInstance;

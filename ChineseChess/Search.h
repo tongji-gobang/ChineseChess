@@ -61,16 +61,16 @@ extern S Search;
  // "qsort"按历史表排序的比较函数
 int CompareHistory(const void *lpmv1, const void *lpmv2);
 
-// 超出边界(Fail-Soft)的Alpha-Beta搜索过程
-int SearchFull(int vlalpha, int vlbeta, int nDepth, bool NoNull = FALSE);
+// 完整的Alpha-Beta搜索
+int WholeSearch(int alpha, int beta, int depth, bool no_null_cut = FALSE);
 
-// 迭代加深搜索过程
-void SearchMain(clock_t time_limit);
+// 顶层搜索调用
+void TopSearch(clock_t time_limit);
 
 // "GenerateMoves"参数，是否只产生吃子着法
 const bool GEN_CAPTURE = true;
 
-// "SearchFull"的参数，空着裁剪开关
+// "WholeSearch"的参数，空着裁剪开关
 const bool NO_NULL = true;
 
 // MVV/LVA每种子力的价值
@@ -87,9 +87,9 @@ int MvvLva(int mv);
 int CompareMvvLva(const void *p1, const void *p2);
 
 // "qsort"按历史表排序的比较函数
-static int CompareHistory(const void *p1, const void *p2);
+int CompareHistory(const void *p1, const void *p2);
 
 // 静态搜索
-int SearchQuiesc(int alpha, int beta);
+int QuiescSearch(int alpha, int beta);
 
 

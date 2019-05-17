@@ -1,4 +1,4 @@
-
+ï»¿
 #define DEBUG
 //#define CPP3 1
 
@@ -7,7 +7,6 @@
 //#define CPP5  3
 #define CPP6 4
 
-
 #include"Search.h"
 #include"RESOURCE.H"
 #include"ChessBoard.h"
@@ -15,113 +14,114 @@
 
 S Search;
 
-// ÉèÖÃ×îÓÅmove
-void SetBestMove(int mv, int nDepth) {
-	int *lpmvKillers;
-	Search.nHistoryTable[mv] += nDepth * nDepth;  // Ğ´ÈëÀúÊ·±í
-	lpmvKillers = Search.mvKillers[pos.RootDistance];  // Ğ´ÈëÉ±ÊÖ±í // ! Search.mvKillers[MAX][2]
-	if (lpmvKillers[0] != mv) {
-		lpmvKillers[1] = lpmvKillers[0];
-		lpmvKillers[0] = mv;
+// è®¾ç½®æœ€ä¼˜move
+void SetBestMove(int mv, int depth) {
+	int *p;
+	Search.nHistoryTable[mv] += depth * depth;  // å†™å…¥å†å²è¡¨
+	p = Search.mvKillers[pos.RootDistance];  // å†™å…¥æ€æ‰‹è¡¨ // ! Search.mvKillers[MAX][2]
+	if (p[0] != mv) {
+		p[1] = p[0];
+		p[0] = mv;
 	}
 }
 
-// ¾²Ì¬(Quiescence)ËÑË÷¹ı³Ì
-int SearchQuiesc(int alpha, int beta) {
+// é™æ€æœç´¢
+int QuiescSearch(int alpha, int beta) {
 	int i, movenum;
 	int value, best;
 	int mvs[MAX_GEN_MOVES];
 
-	// 1. ¼ì²éÖØ¸´¾ÖÃæ
+	// 1. æ£€æŸ¥é‡å¤å±€é¢
 	value = pos.IsRepetitive();
 	if (value != 0)
-		return pos.RepeatValue(value);	// ÈôÖØ¸´Ôò·µ»ØÏàÓ¦µÄÖØ¸´·Ö
+		return pos.RepeatValue(value);	// è‹¥é‡å¤åˆ™è¿”å›ç›¸åº”çš„é‡å¤åˆ†
 
-	// 2. ÏŞÖÆËÑË÷Éî¶È
+	// 2. é™åˆ¶æœç´¢æ·±åº¦
 	if (pos.RootDistance == LIMIT_DEPTH)
 		return pos.Evaluate();
 
-	// 3. ×î¼ÑÖµÉèÎªÉ±Æå·Ö
-	best = -MATE_VALUE; // ÕâÑù¿ÉÒÔÖªµÀ£¬ÊÇ·ñÒ»¸ö×ß·¨¶¼Ã»×ß¹ı(É±Æå)
+	// 3. æœ€ä½³å€¼è®¾ä¸ºæ€æ£‹åˆ†
+	best = -MATE_VALUE; // è¿™æ ·å¯ä»¥çŸ¥é“ï¼Œæ˜¯å¦ä¸€ä¸ªèµ°æ³•éƒ½æ²¡èµ°è¿‡(æ€æ£‹)
 
 	if (pos.LastCheck()) {
-		// 4. Èç¹û±»½«¾ü£¬ÔòÉú³ÉÈ«²¿×ß·¨
+		// 4. å¦‚æœè¢«å°†å†›ï¼Œåˆ™ç”Ÿæˆå…¨éƒ¨èµ°æ³•
 		movenum = pos.GenerateMoves(mvs);
 		qsort(mvs, movenum, sizeof(int), CompareHistory);
 	}
 	else {
 
-		// 5. Èç¹û²»±»½«¾ü£¬ÏÈÆÀ¼Ûµ±Ç°¾ÖÃæ
+		// 5. å¦‚æœä¸è¢«å°†å†›ï¼Œå…ˆè¯„ä»·å½“å‰å±€é¢
 		value = pos.Evaluate();
-		if (value > best) {			// ÕÒµ½×î¼ÑÖµ
+		if (value > best) {			// æ‰¾åˆ°æœ€ä½³å€¼
 			best = value;
-			if (value >= beta) {	// ÕÒµ½beta×ß·¨
-				return value;		// ÆÀ¼ÛºÃµÃ×ãÒÔ½Ø¶Ï¶ø²»ĞèÒªÊÔÍ¼³Ô×Ó
+			if (value >= beta) {	// æ‰¾åˆ°betaèµ°æ³•
+				return value;		// è¯„ä»·å¥½å¾—è¶³ä»¥æˆªæ–­è€Œä¸éœ€è¦è¯•å›¾åƒå­
 			}
 			if (value > alpha) {
 				alpha = value;
 			}
 		}
 
-		// 6. Èç¹û¾ÖÃæÆÀ¼ÛÃ»ÓĞ½Ø¶Ï£¬ÔÙ¿¼ÂÇ³Ô×Ó×ß·¨
+		// 6. å¦‚æœå±€é¢è¯„ä»·æ²¡æœ‰æˆªæ–­ï¼Œå†è€ƒè™‘åƒå­èµ°æ³•
 		movenum = pos.GenerateMoves(mvs, GEN_CAPTURE);
-		qsort(mvs, movenum, sizeof(int), CompareMvvLva);	//°´MVVLVAÅÅĞò³Ô×Ó×Å·¨
+		qsort(mvs, movenum, sizeof(int), CompareMvvLva);	//æŒ‰MVVLVAæ’åºåƒå­ç€æ³•
 	}
 
-	// 7. ÖğÒ»×ßÕâĞ©×ß·¨£¬²¢½øĞĞµİ¹é
+	// 7. é€ä¸€èµ°è¿™äº›èµ°æ³•ï¼Œå¹¶è¿›è¡Œé€’å½’
 	for (i = 0; i < movenum; ++i) {
 		//int PieceCaptured;
 		if (pos.MakeMove(mvs[i])) {
-			value = -SearchQuiesc(-beta, -alpha);
+			value = -QuiescSearch(-beta, -alpha);
 			pos.UndoMakeMove();
 
-			// 8. ½øĞĞAlpha-Beta´óĞ¡ÅĞ¶ÏºÍ½Ø¶Ï
-			if (value > best) {		// ÕÒµ½×î¼ÑÖµ(µ«²»ÄÜÈ·¶¨ÊÇAlpha¡¢PV»¹ÊÇBeta×ß·¨)
-				best = value;		// "best"¾ÍÊÇÄ¿Ç°Òª·µ»ØµÄ×î¼ÑÖµ£¬¿ÉÄÜ³¬³öAlpha-Beta±ß½ç
-				if (value >= beta) {// ÕÒµ½Ò»¸öBeta×ß·¨
+			// 8. è¿›è¡ŒAlpha-Betaå¤§å°åˆ¤æ–­å’Œæˆªæ–­
+			if (value > best) {		// æ‰¾åˆ°æœ€ä½³å€¼(ä½†ä¸èƒ½ç¡®å®šæ˜¯Alphaã€PVè¿˜æ˜¯Betaèµ°æ³•)
+				best = value;		// "best"å°±æ˜¯ç›®å‰è¦è¿”å›çš„æœ€ä½³å€¼ï¼Œå¯èƒ½è¶…å‡ºAlpha-Betaè¾¹ç•Œ
+				if (value >= beta) {// æ‰¾åˆ°ä¸€ä¸ªBetaèµ°æ³•
 					return value;
 				}
-				if (value > alpha) {	// ÕÒµ½Ò»¸öPV×ß·¨
-					alpha = value;		// ¸üĞÂalpha£¬ËõĞ¡Alpha-Beta±ß½ç
+				if (value > alpha) {	// æ‰¾åˆ°ä¸€ä¸ªPVèµ°æ³•
+					alpha = value;		// æ›´æ–°alphaï¼Œç¼©å°Alpha-Betaè¾¹ç•Œ
 				}
 			}
 		}
 	}
 
-	// 9. ÈôÒ»¸ö×ß·¨Ò²Ã»×ß£¬ÔòËµÃ÷±»É±£¬·µ»ØÉ±Æå·Ö£¬·ñÔò·µ»Øbest
+	// 9. è‹¥ä¸€ä¸ªèµ°æ³•ä¹Ÿæ²¡èµ°ï¼Œåˆ™è¯´æ˜è¢«æ€ï¼Œè¿”å›æ€æ£‹åˆ†ï¼Œå¦åˆ™è¿”å›best
 	return best == -MATE_VALUE ? pos.RootDistance - MATE_VALUE : best;
 }
 
+// æŸ¥æ‰¾ç½®æ¢è¡¨é¡¹
 int ProbeHash(int vl_Alpha, int vl_Beta, int Depth, int &mv) {
-	bool  bMate; // É±Æå±êÖ¾
-				 //Í¨¹ı [ dwKey % HASH_SIZE ] µÃµ½¾ßÌå×ß·¨
-				 // ¿ÉÒÔÍ¨¹ıÖ¸ÕëÓÅ»¯hsh
+	bool  bMate; // æ€æ£‹æ ‡å¿—
+				 //é€šè¿‡ [ dwKey % HASH_SIZE ] å¾—åˆ°å…·ä½“èµ°æ³•
+				 // å¯ä»¥é€šè¿‡æŒ‡é’ˆä¼˜åŒ–hsh
 	HashItem hsh = Search.HashTable[pos.zobr.dwKey & HASH_SIZE_end];
 	//
-	if (hsh.Lock0 != pos.zobr.dwLock0 || hsh.Lock1 != pos.zobr.dwLock1) {		//Èç¹û¼ìÑéÂë²»Í¬£¬ÔòÌø³ö
+	if (hsh.Lock0 != pos.zobr.dwLock0 || hsh.Lock1 != pos.zobr.dwLock1) {		//å¦‚æœæ£€éªŒç ä¸åŒï¼Œåˆ™è·³å‡º
 		mv = 0;
 		return MATE_VALUE_neg;
 	}
 
 	mv = hsh.mv;
-	bMate = FALSE;						//Ä¬ÈÏÎ´ËÑË÷µ½É±Æå
+	bMate = FALSE;						//é»˜è®¤æœªæœç´¢åˆ°æ€æ£‹
 
-										//[win_value,Ban_value],ÔòÎª´æÔÚÉ±Æåµ«³¤½«£»
+										//[win_value,Ban_value],åˆ™ä¸ºå­˜åœ¨æ€æ£‹ä½†é•¿å°†ï¼›
 	if (hsh.vl > WIN_VALUE) {
-		if (hsh.vl < BAN_VALUE)			//µÍÓÚ³¤½«ÅĞ¸ºµÄ·ÖÖµÔò²»Ğ´ÈëÖÃ»»±í
-			return MATE_VALUE_neg;			// ¿ÉÄÜµ¼ÖÂËÑË÷µÄ²»ÎÈ¶¨ĞÔ£¬Á¢¿ÌÍË³ö£¬µ«×î¼Ñ×Å·¨¿ÉÄÜÄÃµ½
-		hsh.vl -= pos.RootDistance;		//>Ban_value É±ÆåÇÒ²»³¤½«
+		if (hsh.vl < BAN_VALUE)			//ä½äºé•¿å°†åˆ¤è´Ÿçš„åˆ†å€¼åˆ™ä¸å†™å…¥ç½®æ¢è¡¨
+			return MATE_VALUE_neg;			// å¯èƒ½å¯¼è‡´æœç´¢çš„ä¸ç¨³å®šæ€§ï¼Œç«‹åˆ»é€€å‡ºï¼Œä½†æœ€ä½³ç€æ³•å¯èƒ½æ‹¿åˆ°
+		hsh.vl -= pos.RootDistance;		//>Ban_value æ€æ£‹ä¸”ä¸é•¿å°†
 		bMate = TRUE;
 	}
 	else if (hsh.vl < -WIN_VALUE) {
 		if (hsh.vl > -BAN_VALUE) {
-			return MATE_VALUE_neg;     //¸ºÊıÀàËÆ
+			return MATE_VALUE_neg;     //è´Ÿæ•°ç±»ä¼¼
 		}
 		hsh.vl += pos.RootDistance;
 		bMate = TRUE;
 	}
 
-	if (hsh.Depth >= Depth || bMate) {			//Âú×ãÉî¶ÈÏŞÖÆ»òÕßÎªÉ±Æå£¨Èç¹ûÊÇÉ±Æå£¬ÄÇÃ´²»ĞèÒªÂú×ãÉî¶ÈÌõ¼ş£©
+	if (hsh.Depth >= Depth || bMate) {			//æ»¡è¶³æ·±åº¦é™åˆ¶æˆ–è€…ä¸ºæ€æ£‹ï¼ˆå¦‚æœæ˜¯æ€æ£‹ï¼Œé‚£ä¹ˆä¸éœ€è¦æ»¡è¶³æ·±åº¦æ¡ä»¶ï¼‰
 		switch (hsh.Flag)
 		{
 			case HASH_BETA:		return (hsh.vl >= vl_Beta ? hsh.vl : MATE_VALUE_neg); break;
@@ -133,23 +133,21 @@ int ProbeHash(int vl_Alpha, int vl_Beta, int Depth, int &mv) {
 	return MATE_VALUE_neg;
 };
 
-
-
-// ±£´æÖÃ»»±íÏî
+// ä¿å­˜ç½®æ¢è¡¨é¡¹
 void RecordHash(int Flag, int vl, int Depth, int mv) {
-	// ¿ÉÒÔÍ¨¹ıÖ¸ÕëÓÅ»¯hsh
+	// å¯ä»¥é€šè¿‡æŒ‡é’ˆä¼˜åŒ–hsh
 	HashItem hsh = Search.HashTable[pos.zobr.dwKey & HASH_SIZE_end];
 	if (hsh.Depth > Depth) {
 		return;
 	}
 
 	if (vl > WIN_VALUE) {
-		if (mv == 0 && vl <= BAN_VALUE) {		// ¿ÉÄÜµ¼ÖÂËÑË÷µÄ²»ÎÈ¶¨ĞÔ£¬²¢ÇÒÃ»ÓĞ×î¼Ñ×Å·¨£¬Á¢¿ÌÍË³ö
+		if (mv == 0 && vl <= BAN_VALUE) {		// å¯èƒ½å¯¼è‡´æœç´¢çš„ä¸ç¨³å®šæ€§ï¼Œå¹¶ä¸”æ²¡æœ‰æœ€ä½³ç€æ³•ï¼Œç«‹åˆ»é€€å‡º
 			return;
 		}
-		hsh.vl = vl + pos.RootDistance;			//>Ban_value É±ÆåÇÒ²»³¤½«
+		hsh.vl = vl + pos.RootDistance;			//>Ban_value æ€æ£‹ä¸”ä¸é•¿å°†
 	}
-	else if (vl < -WIN_VALUE) {					// Í¬ÉÏ
+	else if (vl < -WIN_VALUE) {					// åŒä¸Š
 		if (mv == 0 && vl >= -BAN_VALUE) {
 			return;
 		}
@@ -162,209 +160,209 @@ void RecordHash(int Flag, int vl, int Depth, int mv) {
 	Search.HashTable[pos.zobr.dwKey & HASH_SIZE_end] = { (BYTE)Depth,(BYTE)Flag,hsh.vl,(WORD)mv,pos.zobr.dwLock0,pos.zobr.dwLock1 };
 };
 
-// ÇóMVV/LVAÖµ
+// æ±‚MVV/LVAå€¼
 int MvvLva(int mv) {
 	return (cucMvvLva[pos.Board[DstPos(mv)]] << 3) - cucMvvLva[pos.Board[SrcPos(mv)]];
 }
 
-// qsort°´MVV/LVAÖµÅÅĞòµÄ±È½Ïº¯Êı
+// qsortæŒ‰MVV/LVAå€¼æ’åºçš„æ¯”è¾ƒå‡½æ•°
 int CompareMvvLva(const void *p1, const void *p2) {
 	return MvvLva(*(int *)p2) - MvvLva(*(int *)p1);
 }
 
-// qsortÀúÊ·±íÅÅĞòµÄ±È½Ïº¯Êı
+// qsortå†å²è¡¨æ’åºçš„æ¯”è¾ƒå‡½æ•°
 int CompareHistory(const void *p1, const void *p2) {
 	return Search.nHistoryTable[*(int *)p2] - Search.nHistoryTable[*(int *)p1];
 }
 
 #ifdef CPP3
-int SearchFull(int vlAlpha, int vlBeta, int nDepth, bool NoNull) {
+int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
 	int i, nGenMoves, pcCaptured;
-	int vl, vlBest, mvBest;
+	int vl, best_value, mvBest;
 	int mvs[MAX_GEN_MOVES];
-	// Ò»¸öAlpha-BetaÍêÈ«ËÑË÷·ÖÎªÒÔÏÂ¼¸¸ö½×¶Î
+	// ä¸€ä¸ªAlpha-Betaå®Œå…¨æœç´¢åˆ†ä¸ºä»¥ä¸‹å‡ ä¸ªé˜¶æ®µ
 
-	// 1. µ½´ïË®Æ½Ïß£¬Ôò·µ»Ø¾ÖÃæÆÀ¼ÛÖµ
-	if (nDepth == 0) {
+	// 1. åˆ°è¾¾æ°´å¹³çº¿ï¼Œåˆ™è¿”å›å±€é¢è¯„ä»·å€¼
+	if (depth == 0) {
 		return pos.Evaluate();
 	}
 
-	// 2. ³õÊ¼»¯×î¼ÑÖµºÍ×î¼Ñ×ß·¨
-	vlBest = -MATE_VALUE; // ÕâÑù¿ÉÒÔÖªµÀ£¬ÊÇ·ñÒ»¸ö×ß·¨¶¼Ã»×ß¹ı(É±Æå)
-	mvBest = 0;           // ÕâÑù¿ÉÒÔÖªµÀ£¬ÊÇ·ñËÑË÷µ½ÁËBeta×ß·¨»òPV×ß·¨£¬ÒÔ±ã±£´æµ½ÀúÊ·±í
+	// 2. åˆå§‹åŒ–æœ€ä½³å€¼å’Œæœ€ä½³èµ°æ³•
+	best_value = -MATE_VALUE; // è¿™æ ·å¯ä»¥çŸ¥é“ï¼Œæ˜¯å¦ä¸€ä¸ªèµ°æ³•éƒ½æ²¡èµ°è¿‡(æ€æ£‹)
+	mvBest = 0;           // è¿™æ ·å¯ä»¥çŸ¥é“ï¼Œæ˜¯å¦æœç´¢åˆ°äº†Betaèµ°æ³•æˆ–PVèµ°æ³•ï¼Œä»¥ä¾¿ä¿å­˜åˆ°å†å²è¡¨
 
-						  // 3. Éú³ÉÈ«²¿×ß·¨£¬²¢¸ù¾İÀúÊ·±íÅÅĞò
+						  // 3. ç”Ÿæˆå…¨éƒ¨èµ°æ³•ï¼Œå¹¶æ ¹æ®å†å²è¡¨æ’åº
 	nGenMoves = pos.GenerateMoves(mvs);
 	qsort(mvs, nGenMoves, sizeof(int), CompareHistory);
 
-	// 4. ÖğÒ»×ßÕâĞ©×ß·¨£¬²¢½øĞĞµİ¹é  //£¬Éî¶ÈÓÅÏÈ±éÀú
+	// 4. é€ä¸€èµ°è¿™äº›èµ°æ³•ï¼Œå¹¶è¿›è¡Œé€’å½’  //ï¼Œæ·±åº¦ä¼˜å…ˆéå†
 	for (i = 0; i < nGenMoves; i++) {
 		if (pos.MakeMove(mvs[i])) {
-			vl = -SearchFull(-vlBeta, -vlAlpha, nDepth - 1);
+			vl = -WholeSearch(-beta, -alpha, depth - 1);
 			pos.UndoMakeMove();
 
-			// 5. ½øĞĞAlpha-Beta´óĞ¡ÅĞ¶ÏºÍ½Ø¶Ï
-			if (vl > vlBest) {    // ÕÒµ½×î¼ÑÖµ(µ«²»ÄÜÈ·¶¨ÊÇAlpha¡¢PV»¹ÊÇBeta×ß·¨)  
+			// 5. è¿›è¡ŒAlpha-Betaå¤§å°åˆ¤æ–­å’Œæˆªæ–­
+			if (vl > best_value) {    // æ‰¾åˆ°æœ€ä½³å€¼(ä½†ä¸èƒ½ç¡®å®šæ˜¯Alphaã€PVè¿˜æ˜¯Betaèµ°æ³•)  
 
 
-				vlBest = vl;        // "vlBest"¾ÍÊÇÄ¿Ç°Òª·µ»ØµÄ×î¼ÑÖµ£¬¿ÉÄÜ³¬³öAlpha-Beta±ß½ç
-				if (vl >= vlBeta) { // ÕÒµ½Ò»¸öBeta×ß·¨
-					mvBest = mvs[i];  // Beta×ß·¨Òª±£´æµ½ÀúÊ·±í
-					break;            // Beta½Ø¶Ï
+				best_value = vl;        // "best_value"å°±æ˜¯ç›®å‰è¦è¿”å›çš„æœ€ä½³å€¼ï¼Œå¯èƒ½è¶…å‡ºAlpha-Betaè¾¹ç•Œ
+				if (vl >= beta) { // æ‰¾åˆ°ä¸€ä¸ªBetaèµ°æ³•
+					mvBest = mvs[i];  // Betaèµ°æ³•è¦ä¿å­˜åˆ°å†å²è¡¨
+					break;            // Betaæˆªæ–­
 				}
-				if (vl > vlAlpha) { // ÕÒµ½Ò»¸öPV×ß·¨
-					mvBest = mvs[i];  // PV×ß·¨Òª±£´æµ½ÀúÊ·±í
-					vlAlpha = vl;     // ËõĞ¡Alpha-Beta±ß½ç
+				if (vl > alpha) { // æ‰¾åˆ°ä¸€ä¸ªPVèµ°æ³•
+					mvBest = mvs[i];  // PVèµ°æ³•è¦ä¿å­˜åˆ°å†å²è¡¨
+					alpha = vl;     // ç¼©å°Alpha-Betaè¾¹ç•Œ
 				}
 			}
 		}
 	}
 
-	// 5. ËùÓĞ×ß·¨¶¼ËÑË÷ÍêÁË£¬°Ñ×î¼Ñ×ß·¨(²»ÄÜÊÇAlpha×ß·¨)±£´æµ½ÀúÊ·±í£¬·µ»Ø×î¼ÑÖµ
-	if (vlBest == -MATE_VALUE) {
-		// Èç¹ûÊÇÉ±Æå£¬¾Í¸ù¾İÉ±Æå²½Êı¸ø³öÆÀ¼Û
+	// 5. æ‰€æœ‰èµ°æ³•éƒ½æœç´¢å®Œäº†ï¼ŒæŠŠæœ€ä½³èµ°æ³•(ä¸èƒ½æ˜¯Alphaèµ°æ³•)ä¿å­˜åˆ°å†å²è¡¨ï¼Œè¿”å›æœ€ä½³å€¼
+	if (best_value == -MATE_VALUE) {
+		// å¦‚æœæ˜¯æ€æ£‹ï¼Œå°±æ ¹æ®æ€æ£‹æ­¥æ•°ç»™å‡ºè¯„ä»·
 		return pos.RootDistance - MATE_VALUE;
 	}
 	if (mvBest != 0) {
-		// Èç¹û²»ÊÇAlpha×ß·¨£¬¾Í½«×î¼Ñ×ß·¨±£´æµ½ÀúÊ·±í
-		Search.nHistoryTable[mvBest] += nDepth * nDepth;
+		// å¦‚æœä¸æ˜¯Alphaèµ°æ³•ï¼Œå°±å°†æœ€ä½³èµ°æ³•ä¿å­˜åˆ°å†å²è¡¨
+		Search.nHistoryTable[mvBest] += depth * depth;
 		if (pos.RootDistance == 0) {
-			// ËÑË÷¸ù½ÚµãÊ±£¬×ÜÊÇÓĞÒ»¸ö×î¼Ñ×ß·¨(ÒòÎªÈ«´°¿ÚËÑË÷²»»á³¬³ö±ß½ç)£¬½«Õâ¸ö×ß·¨±£´æÏÂÀ´
+			// æœç´¢æ ¹èŠ‚ç‚¹æ—¶ï¼Œæ€»æ˜¯æœ‰ä¸€ä¸ªæœ€ä½³èµ°æ³•(å› ä¸ºå…¨çª—å£æœç´¢ä¸ä¼šè¶…å‡ºè¾¹ç•Œ)ï¼Œå°†è¿™ä¸ªèµ°æ³•ä¿å­˜ä¸‹æ¥
 			Search.mvResult = mvBest;
 		}
 	}
-	return vlBest;
+	return best_value;
 }
 
 #elif CPP4
-int SearchFull(int vlAlpha, int vlBeta, int nDepth, bool bNoNull) {
+int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
 	int i, nGenMoves;
-	int vl, vlBest, mvBest;
+	int vl, best_value, mvBest;
 	int mvs[MAX_GEN_MOVES];
-	// Ò»¸öAlpha-BetaÍêÈ«ËÑË÷·ÖÎªÒÔÏÂ¼¸¸ö½×¶Î
+	// ä¸€ä¸ªAlpha-Betaå®Œå…¨æœç´¢åˆ†ä¸ºä»¥ä¸‹å‡ ä¸ªé˜¶æ®µ
 
 	if (pos.RootDistance > 0) {
 
-		// 1. µ½´ïË®Æ½Ïß£¬Ôòµ÷ÓÃ¾²Ì¬ËÑË÷(×¢Òâ£ºÓÉÓÚ¿Õ²½²Ã¼ô£¬Éî¶È¿ÉÄÜĞ¡ÓÚÁã)  // ! Ô­Òò£º¿Õ²½²Ã¼ôº¯ÊıÖĞn.distence--
-		if (nDepth <= 0) {
-			return SearchQuiesc(vlAlpha, vlBeta);
+		// 1. åˆ°è¾¾æ°´å¹³çº¿ï¼Œåˆ™è°ƒç”¨é™æ€æœç´¢(æ³¨æ„ï¼šç”±äºç©ºæ­¥è£å‰ªï¼Œæ·±åº¦å¯èƒ½å°äºé›¶)  // ! åŸå› ï¼šç©ºæ­¥è£å‰ªå‡½æ•°ä¸­n.distence--
+		if (depth <= 0) {
+			return QuiescSearch(alpha, beta);
 		}
 
-		// 1-1. ¼ì²éÖØ¸´¾ÖÃæ(×¢Òâ£º²»ÒªÔÚ¸ù½Úµã¼ì²é£¬·ñÔò¾ÍÃ»ÓĞ×ß·¨ÁË£¬// ! ¹ÊÉÏ·½if£¨nDistance > 0£©)
+		// 1-1. æ£€æŸ¥é‡å¤å±€é¢(æ³¨æ„ï¼šä¸è¦åœ¨æ ¹èŠ‚ç‚¹æ£€æŸ¥ï¼Œå¦åˆ™å°±æ²¡æœ‰èµ°æ³•äº†ï¼Œ// ! æ•…ä¸Šæ–¹ifï¼ˆnDistance > 0ï¼‰)
 		vl = pos.IsRepetitive();
 		if (vl != 0) {
 			return pos.RepeatValue(vl);
 		}
 
-		// 1-2. µ½´ï¼«ÏŞÉî¶È¾Í·µ»Ø¾ÖÃæÆÀ¼Û
+		// 1-2. åˆ°è¾¾æé™æ·±åº¦å°±è¿”å›å±€é¢è¯„ä»·
 		if (pos.RootDistance == LIMIT_DEPTH) {
 			return pos.Evaluate();
 		}
-		//  ÓĞº¦µÄ×Å×ÓÊÇ·Ç³£º±¼ûµÄ(³ıÁË²Ğ¾ÖÒÔÍâ)¡£Í¨³£Èç¹ûÂÖµ½Äã×ß£¬ÄãÒ»¶¨ÄÜÈÃ¾ÖÃæ¸üºÃĞ©¡£
-		//  ËùÓĞ¿ÉÄÜµÄ×Å·¨¶¼Ê¹¾ÖÃæ±äµÃ¸üÔã£¬
-		//  ÕâÑùµÄ¾ÖÃæ³ÆÎª¡°ÎŞµÈ×Å¡±(Zugzwang)(µÂÓï£¬ÒâË¼ÎªÇ¿ÆÈ×Å×Ó)£¬Í¨³£Ö»·¢ÉúÔÚ²Ğ¾ÖÖĞ¡£
-		//  Òò´Ë£¬¼ÙÉèÄãËÑË÷Ò»¸öÏ£Íû¸ß³ö±ß½çµÄ½áµã(¼´Alpha-BetaËÑË÷µÄ·µ»ØÖµÖÁÉÙÊÇBeta)£¬
-		//  ¿Õ×ÅËÑË÷¾ÍÊÇÏÈËÑË÷¡°ÆúÈ¨¡±×Å·¨¡¾¼´¡°¿Õ×Å¡±(Null-Move)¡¿£¬¼´Ê¹ËüÍ¨³£²»ÊÇ×îºÃµÄ¡£
-		//  Èç¹ûÆúÈ¨×Å·¨¸ß³ö±ß½ç£¬ÄÇÃ´ÕæÕı×îºÃµÄ×Å·¨Ò²¿ÉÄÜ¸ß³ö±ß½ç£¬Äã¾Í¿ÉÒÔÖ±½Ó·µ»ØBeta¶ø²»ÒªÔÙÈ¥ËÑË÷ÁË¡£
-		//  Òª°ÑËÑË÷×öµÃ¸ü¿ì£¬ÆúÈ¨×Å·¨ËÑË÷µÄÉî¶ÈÍ¨³£±È³£¹æ×Å·¨Ç³¡£
-		//  Äã±ØĞëĞ¡ĞÄ£¬ÕâÖÖÆô·¢»á¸Ä±äËÑË÷½á¹û£¬Ò²¿ÉÄÜÊ¹ÄãºöÂÔÆå¾ÖÖĞµÄÒ»Ğ©ÖØÒªµÄÏßÂ·¡£
-		//  ²»ÒªÁ¬ĞøÁ½´ÎÓÃ¿Õ×Å(ÒòÎªÕâÑùÄãµÄËÑË÷»áÍË»¯£¬½á¹ûÖ»·µ»ØÆÀ¼Ûº¯Êı)£¬¶øÇÒÒªĞ¡ĞÄ£¬Ö»ÄÜÔÚ²»»á³öÏÖÎŞµÈ×ÅµÄÇé¿öÏÂÊ¹ÓÃ¡£
+		//  æœ‰å®³çš„ç€å­æ˜¯éå¸¸ç½•è§çš„(é™¤äº†æ®‹å±€ä»¥å¤–)ã€‚é€šå¸¸å¦‚æœè½®åˆ°ä½ èµ°ï¼Œä½ ä¸€å®šèƒ½è®©å±€é¢æ›´å¥½äº›ã€‚
+		//  æ‰€æœ‰å¯èƒ½çš„ç€æ³•éƒ½ä½¿å±€é¢å˜å¾—æ›´ç³Ÿï¼Œ
+		//  è¿™æ ·çš„å±€é¢ç§°ä¸ºâ€œæ— ç­‰ç€â€(Zugzwang)(å¾·è¯­ï¼Œæ„æ€ä¸ºå¼ºè¿«ç€å­)ï¼Œé€šå¸¸åªå‘ç”Ÿåœ¨æ®‹å±€ä¸­ã€‚
+		//  å› æ­¤ï¼Œå‡è®¾ä½ æœç´¢ä¸€ä¸ªå¸Œæœ›é«˜å‡ºè¾¹ç•Œçš„ç»“ç‚¹(å³Alpha-Betaæœç´¢çš„è¿”å›å€¼è‡³å°‘æ˜¯Beta)ï¼Œ
+		//  ç©ºç€æœç´¢å°±æ˜¯å…ˆæœç´¢â€œå¼ƒæƒâ€ç€æ³•ã€å³â€œç©ºç€â€(Null-Move)ã€‘ï¼Œå³ä½¿å®ƒé€šå¸¸ä¸æ˜¯æœ€å¥½çš„ã€‚
+		//  å¦‚æœå¼ƒæƒç€æ³•é«˜å‡ºè¾¹ç•Œï¼Œé‚£ä¹ˆçœŸæ­£æœ€å¥½çš„ç€æ³•ä¹Ÿå¯èƒ½é«˜å‡ºè¾¹ç•Œï¼Œä½ å°±å¯ä»¥ç›´æ¥è¿”å›Betaè€Œä¸è¦å†å»æœç´¢äº†ã€‚
+		//  è¦æŠŠæœç´¢åšå¾—æ›´å¿«ï¼Œå¼ƒæƒç€æ³•æœç´¢çš„æ·±åº¦é€šå¸¸æ¯”å¸¸è§„ç€æ³•æµ…ã€‚
+		//  ä½ å¿…é¡»å°å¿ƒï¼Œè¿™ç§å¯å‘ä¼šæ”¹å˜æœç´¢ç»“æœï¼Œä¹Ÿå¯èƒ½ä½¿ä½ å¿½ç•¥æ£‹å±€ä¸­çš„ä¸€äº›é‡è¦çš„çº¿è·¯ã€‚
+		//  ä¸è¦è¿ç»­ä¸¤æ¬¡ç”¨ç©ºç€(å› ä¸ºè¿™æ ·ä½ çš„æœç´¢ä¼šé€€åŒ–ï¼Œç»“æœåªè¿”å›è¯„ä»·å‡½æ•°)ï¼Œè€Œä¸”è¦å°å¿ƒï¼Œåªèƒ½åœ¨ä¸ä¼šå‡ºç°æ— ç­‰ç€çš„æƒ…å†µä¸‹ä½¿ç”¨ã€‚
 
-		// 1-3. ³¢ÊÔ¿Õ²½²Ã¼ô(¸ù½ÚµãµÄBetaÖµÊÇ"MATE_VALUE"£¬ËùÒÔ²»¿ÉÄÜ·¢Éú¿Õ²½²Ã¼ô)
-		if (!bNoNull && !pos.LastCheck() && pos.NullOkay()) {
+		// 1-3. å°è¯•ç©ºæ­¥è£å‰ª(æ ¹èŠ‚ç‚¹çš„Betaå€¼æ˜¯"MATE_VALUE"ï¼Œæ‰€ä»¥ä¸å¯èƒ½å‘ç”Ÿç©ºæ­¥è£å‰ª)
+		if (!no_null_cut && !pos.LastCheck() && pos.NullOkay()) {
 			pos.MoveNull();
-			vl = -SearchFull(-vlBeta, 1 - vlBeta, nDepth - NULL_DEPTH - 1, NO_NULL);
+			vl = -WholeSearch(-beta, 1 - beta, depth - NULL_DEPTH - 1, NO_NULL);
 			pos.UndoMoveNull();
-			if (vl >= vlBeta) {
+			if (vl >= beta) {
 				return vl;
 			}
 		}
 	}
 
-	// 2. ³õÊ¼»¯×î¼ÑÖµºÍ×î¼Ñ×ß·¨
-	vlBest = -MATE_VALUE; // ÕâÑù¿ÉÒÔÖªµÀ£¬ÊÇ·ñÒ»¸ö×ß·¨¶¼Ã»×ß¹ı(É±Æå)
-	mvBest = 0;           // ÕâÑù¿ÉÒÔÖªµÀ£¬ÊÇ·ñËÑË÷µ½ÁËBeta×ß·¨»òPV×ß·¨£¬ÒÔ±ã±£´æµ½ÀúÊ·±í
+	// 2. åˆå§‹åŒ–æœ€ä½³å€¼å’Œæœ€ä½³èµ°æ³•
+	best_value = -MATE_VALUE; // è¿™æ ·å¯ä»¥çŸ¥é“ï¼Œæ˜¯å¦ä¸€ä¸ªèµ°æ³•éƒ½æ²¡èµ°è¿‡(æ€æ£‹)
+	mvBest = 0;           // è¿™æ ·å¯ä»¥çŸ¥é“ï¼Œæ˜¯å¦æœç´¢åˆ°äº†Betaèµ°æ³•æˆ–PVèµ°æ³•ï¼Œä»¥ä¾¿ä¿å­˜åˆ°å†å²è¡¨
 
-						  // 3. Éú³ÉÈ«²¿×ß·¨£¬²¢¸ù¾İÀúÊ·±íÅÅĞò
+						  // 3. ç”Ÿæˆå…¨éƒ¨èµ°æ³•ï¼Œå¹¶æ ¹æ®å†å²è¡¨æ’åº
 	nGenMoves = pos.GenerateMoves(mvs);
 	qsort(mvs, nGenMoves, sizeof(int), CompareHistory);
 
-	// 4. ÖğÒ»×ßÕâĞ©×ß·¨£¬²¢½øĞĞµİ¹é
+	// 4. é€ä¸€èµ°è¿™äº›èµ°æ³•ï¼Œå¹¶è¿›è¡Œé€’å½’
 	for (i = 0; i < nGenMoves; i++) {
 		if (pos.MakeMove(mvs[i])) {
-			// ½«¾üÑÓÉì pos.InCheck() ? nDepth : nDepth - 1   // ? why£¿£¿£¿£¿£¿£¿£¿£¿£¿£¿£¿£¿
-			vl = -SearchFull(-vlBeta, -vlAlpha, pos.LastCheck() ? nDepth : nDepth - 1);
+			// å°†å†›å»¶ä¼¸ pos.InCheck() ? depth : depth - 1   // ? whyï¼Ÿï¼Ÿï¼Ÿï¼Ÿï¼Ÿï¼Ÿï¼Ÿï¼Ÿï¼Ÿï¼Ÿï¼Ÿï¼Ÿ
+			vl = -WholeSearch(-beta, -alpha, pos.LastCheck() ? depth : depth - 1);
 			pos.UndoMakeMove();
 
-			// 5. ½øĞĞAlpha-Beta´óĞ¡ÅĞ¶ÏºÍ½Ø¶Ï
-			if (vl > vlBest) {    // ÕÒµ½×î¼ÑÖµ(µ«²»ÄÜÈ·¶¨ÊÇAlpha¡¢PV»¹ÊÇBeta×ß·¨)
+			// 5. è¿›è¡ŒAlpha-Betaå¤§å°åˆ¤æ–­å’Œæˆªæ–­
+			if (vl > best_value) {    // æ‰¾åˆ°æœ€ä½³å€¼(ä½†ä¸èƒ½ç¡®å®šæ˜¯Alphaã€PVè¿˜æ˜¯Betaèµ°æ³•)
 
-								  // ! ÉÏÒò£ºvlbest³õÊ¼ÖµÎª-MATE_VALUE£¬²»Ò»¶¨ÔÚab´°¿ÚÀï£¬¹ÊÈçÏÂ£º¡°¿ÉÄÜ³¬³öAlpha-Beta±ß½ç¡±
+								  // ! ä¸Šå› ï¼šbest_valueåˆå§‹å€¼ä¸º-MATE_VALUEï¼Œä¸ä¸€å®šåœ¨abçª—å£é‡Œï¼Œæ•…å¦‚ä¸‹ï¼šâ€œå¯èƒ½è¶…å‡ºAlpha-Betaè¾¹ç•Œâ€
 
-				vlBest = vl;        // "vlBest"¾ÍÊÇÄ¿Ç°Òª·µ»ØµÄ×î¼ÑÖµ£¬
-				if (vl >= vlBeta) { // ÕÒµ½Ò»¸öBeta×ß·¨
-					mvBest = mvs[i];  // Beta×ß·¨Òª±£´æµ½ÀúÊ·±í  ±£´æ¶¯×÷ÔÚÏÂÃæ
-					break;            // Beta½Ø¶Ï
+				best_value = vl;        // "best_value"å°±æ˜¯ç›®å‰è¦è¿”å›çš„æœ€ä½³å€¼ï¼Œ
+				if (vl >= beta) { // æ‰¾åˆ°ä¸€ä¸ªBetaèµ°æ³•
+					mvBest = mvs[i];  // Betaèµ°æ³•è¦ä¿å­˜åˆ°å†å²è¡¨  ä¿å­˜åŠ¨ä½œåœ¨ä¸‹é¢
+					break;            // Betaæˆªæ–­
 				}
-				if (vl > vlAlpha) { // ÕÒµ½Ò»¸öPV×ß·¨
-					mvBest = mvs[i];  // PV×ß·¨Òª±£´æµ½ÀúÊ·±í   ±£´æ¶¯×÷ÔÚÏÂÃæ
-					vlAlpha = vl;     // ËõĞ¡Alpha-Beta±ß½ç
+				if (vl > alpha) { // æ‰¾åˆ°ä¸€ä¸ªPVèµ°æ³•
+					mvBest = mvs[i];  // PVèµ°æ³•è¦ä¿å­˜åˆ°å†å²è¡¨   ä¿å­˜åŠ¨ä½œåœ¨ä¸‹é¢
+					alpha = vl;     // ç¼©å°Alpha-Betaè¾¹ç•Œ
 				}
 			}
 		}
 	}
 
-	// 5. ËùÓĞ×ß·¨¶¼ËÑË÷ÍêÁË£¬°Ñ×î¼Ñ×ß·¨(²»ÄÜÊÇAlpha×ß·¨)±£´æµ½ÀúÊ·±í£¬·µ»Ø×î¼ÑÖµ   //ÊÇ²»ÊÇ¾ÍÊÇPV×ß·¨£¿
-	if (vlBest == -MATE_VALUE) {
-		// Èç¹ûÊÇÉ±Æå£¬¾Í¸ù¾İÉ±Æå²½Êı¸ø³öÆÀ¼Û
+	// 5. æ‰€æœ‰èµ°æ³•éƒ½æœç´¢å®Œäº†ï¼ŒæŠŠæœ€ä½³èµ°æ³•(ä¸èƒ½æ˜¯Alphaèµ°æ³•)ä¿å­˜åˆ°å†å²è¡¨ï¼Œè¿”å›æœ€ä½³å€¼   //æ˜¯ä¸æ˜¯å°±æ˜¯PVèµ°æ³•ï¼Ÿ
+	if (best_value == -MATE_VALUE) {
+		// å¦‚æœæ˜¯æ€æ£‹ï¼Œå°±æ ¹æ®æ€æ£‹æ­¥æ•°ç»™å‡ºè¯„ä»·
 		return pos.RootDistance - MATE_VALUE;
 	}
 	if (mvBest != 0) {
-		// Èç¹û²»ÊÇAlpha×ß·¨£¬¾Í½«×î¼Ñ×ß·¨±£´æµ½ÀúÊ·±í
-		Search.nHistoryTable[mvBest] += nDepth * nDepth;
+		// å¦‚æœä¸æ˜¯Alphaèµ°æ³•ï¼Œå°±å°†æœ€ä½³èµ°æ³•ä¿å­˜åˆ°å†å²è¡¨
+		Search.nHistoryTable[mvBest] += depth * depth;
 		if (pos.RootDistance == 0) {
-			// ËÑË÷¸ù½ÚµãÊ±£¬×ÜÊÇÓĞÒ»¸ö×î¼Ñ×ß·¨(ÒòÎªÈ«´°¿ÚËÑË÷²»»á³¬³ö±ß½çÕıÎŞÇîºÍ¸ºÎŞÇî)£¬½«Õâ¸ö×ß·¨±£´æÏÂÀ´ why
+			// æœç´¢æ ¹èŠ‚ç‚¹æ—¶ï¼Œæ€»æ˜¯æœ‰ä¸€ä¸ªæœ€ä½³èµ°æ³•(å› ä¸ºå…¨çª—å£æœç´¢ä¸ä¼šè¶…å‡ºè¾¹ç•Œæ­£æ— ç©·å’Œè´Ÿæ— ç©·)ï¼Œå°†è¿™ä¸ªèµ°æ³•ä¿å­˜ä¸‹æ¥ why
 			Search.mvResult = mvBest;
 		}
 	}
-	return vlBest;
+	return best_value;
 }
 #elif CPP5
-int SearchFull(int vlAlpha, int vlBeta, int nDepth, bool bNoNull) {
-	int nHashFlag, vl, vlBest;
+int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
+	int hash_type, vl, best_value;
 	int mv, mvBest, mvHash;
-	SortStruct Sort;
-	// Ò»¸öAlpha-BetaÍêÈ«ËÑË÷·ÖÎªÒÔÏÂ¼¸¸ö½×¶Î
+	SortMoves Sort;
+	// ä¸€ä¸ªAlpha-Betaå®Œå…¨æœç´¢åˆ†ä¸ºä»¥ä¸‹å‡ ä¸ªé˜¶æ®µ
 
 	if (pos.RootDistance > 0) {
-		// 1. µ½´ïË®Æ½Ïß£¬Ôòµ÷ÓÃ¾²Ì¬ËÑË÷(×¢Òâ£ºÓÉÓÚ¿Õ²½²Ã¼ô£¬Éî¶È¿ÉÄÜĞ¡ÓÚÁã)
-		if (nDepth <= 0) {
-			return SearchQuiesc(vlAlpha, vlBeta);
+		// 1. åˆ°è¾¾æ°´å¹³çº¿ï¼Œåˆ™è°ƒç”¨é™æ€æœç´¢(æ³¨æ„ï¼šç”±äºç©ºæ­¥è£å‰ªï¼Œæ·±åº¦å¯èƒ½å°äºé›¶)
+		if (depth <= 0) {
+			return QuiescSearch(alpha, beta);
 		}
 
-		// 1-1. ¼ì²éÖØ¸´¾ÖÃæ(×¢Òâ£º²»ÒªÔÚ¸ù½Úµã¼ì²é£¬·ñÔò¾ÍÃ»ÓĞ×ß·¨ÁË)
+		// 1-1. æ£€æŸ¥é‡å¤å±€é¢(æ³¨æ„ï¼šä¸è¦åœ¨æ ¹èŠ‚ç‚¹æ£€æŸ¥ï¼Œå¦åˆ™å°±æ²¡æœ‰èµ°æ³•äº†)
 		vl = pos.IsRepetitive();
 		if (vl != 0) {
 			return pos.RepeatValue(vl);
 		}
 
-		// 1-2. µ½´ï¼«ÏŞÉî¶È¾Í·µ»Ø¾ÖÃæÆÀ¼Û
+		// 1-2. åˆ°è¾¾æé™æ·±åº¦å°±è¿”å›å±€é¢è¯„ä»·
 		if (pos.RootDistance == LIMIT_DEPTH) {
 			return pos.Evaluate();
 		}
 
-		// 1-3. ³¢ÊÔÖÃ»»±í²Ã¼ô£¬²¢µÃµ½ÖÃ»»±í×ß·¨
-		vl = ProbeHash(vlAlpha, vlBeta, nDepth, mvHash);
+		// 1-3. å°è¯•ç½®æ¢è¡¨è£å‰ªï¼Œå¹¶å¾—åˆ°ç½®æ¢è¡¨èµ°æ³•
+		vl = ProbeHash(alpha, beta, depth, mvHash);
 		if (vl > -MATE_VALUE) {
 			return vl;
 		}
 
-		// 1-4. ³¢ÊÔ¿Õ²½²Ã¼ô(¸ù½ÚµãµÄBetaÖµÊÇ"MATE_VALUE"£¬ËùÒÔ²»¿ÉÄÜ·¢Éú¿Õ²½²Ã¼ô)
-		if (!bNoNull && !pos.LastCheck() && pos.NullOkay()) {
+		// 1-4. å°è¯•ç©ºæ­¥è£å‰ª(æ ¹èŠ‚ç‚¹çš„Betaå€¼æ˜¯"MATE_VALUE"ï¼Œæ‰€ä»¥ä¸å¯èƒ½å‘ç”Ÿç©ºæ­¥è£å‰ª)
+		if (!no_null_cut && !pos.LastCheck() && pos.NullOkay()) {
 			pos.MoveNull();
-			vl = -SearchFull(-vlBeta, 1 - vlBeta, nDepth - NULL_DEPTH - 1, NO_NULL);
+			vl = -WholeSearch(-beta, 1 - beta, depth - NULL_DEPTH - 1, NO_NULL);
 			pos.UndoMoveNull();
-			if (vl >= vlBeta) {
+			if (vl >= beta) {
 				return vl;
 			}
 		}
@@ -373,356 +371,240 @@ int SearchFull(int vlAlpha, int vlBeta, int nDepth, bool bNoNull) {
 		mvHash = 0;
 	}
 
-	// 2. ³õÊ¼»¯×î¼ÑÖµºÍ×î¼Ñ×ß·¨
-	nHashFlag = HASH_ALPHA;
-	vlBest = -MATE_VALUE; // ÕâÑù¿ÉÒÔÖªµÀ£¬ÊÇ·ñÒ»¸ö×ß·¨¶¼Ã»×ß¹ı(É±Æå)
-	mvBest = 0;           // ÕâÑù¿ÉÒÔÖªµÀ£¬ÊÇ·ñËÑË÷µ½ÁËBeta×ß·¨»òPV×ß·¨£¬ÒÔ±ã±£´æµ½ÀúÊ·±í
+	// 2. åˆå§‹åŒ–æœ€ä½³å€¼å’Œæœ€ä½³èµ°æ³•
+	hash_type = HASH_ALPHA;
+	best_value = -MATE_VALUE; // è¿™æ ·å¯ä»¥çŸ¥é“ï¼Œæ˜¯å¦ä¸€ä¸ªèµ°æ³•éƒ½æ²¡èµ°è¿‡(æ€æ£‹)
+	mvBest = 0;           // è¿™æ ·å¯ä»¥çŸ¥é“ï¼Œæ˜¯å¦æœç´¢åˆ°äº†Betaèµ°æ³•æˆ–PVèµ°æ³•ï¼Œä»¥ä¾¿ä¿å­˜åˆ°å†å²è¡¨
 
-						  // 3. ³õÊ¼»¯×ß·¨ÅÅĞò½á¹¹
+						  // 3. åˆå§‹åŒ–èµ°æ³•æ’åºç»“æ„
 	Sort.Init(mvHash);
 
-	// 4. ÖğÒ»×ßÕâĞ©×ß·¨£¬²¢½øĞĞµİ¹é
-	while ((mv = Sort.Next()) != 0) {
+	// 4. é€ä¸€èµ°è¿™äº›èµ°æ³•ï¼Œå¹¶è¿›è¡Œé€’å½’
+	while ((mv = Sort.GetNextMv()) != 0) {
 		if (pos.MakeMove(mv)) {
-			// ½«¾üÑÓÉì
-			vl = -SearchFull(-vlBeta, -vlAlpha, pos.LastCheck() ? nDepth : nDepth - 1);
+			// å°†å†›å»¶ä¼¸
+			vl = -WholeSearch(-beta, -alpha, pos.LastCheck() ? depth : depth - 1);
 			pos.UndoMakeMove();
 
-			// 5. ½øĞĞAlpha-Beta´óĞ¡ÅĞ¶ÏºÍ½Ø¶Ï
-			if (vl > vlBest) {    // ÕÒµ½×î¼ÑÖµ(µ«²»ÄÜÈ·¶¨ÊÇAlpha¡¢PV»¹ÊÇBeta×ß·¨)
-				vlBest = vl;        // "vlBest"¾ÍÊÇÄ¿Ç°Òª·µ»ØµÄ×î¼ÑÖµ£¬¿ÉÄÜ³¬³öAlpha-Beta±ß½ç
-				if (vl >= vlBeta) { // ÕÒµ½Ò»¸öBeta×ß·¨
-					nHashFlag = HASH_BETA;  // ! ÏÈÉè¶¨ºÃ ÊÇÊ²Ã´ÀàĞÍµÄÖÃ»»±í
-					mvBest = mv;      // Beta×ß·¨Òª±£´æµ½ÀúÊ·±í
-					break;            // Beta½Ø¶Ï
+			// 5. è¿›è¡ŒAlpha-Betaå¤§å°åˆ¤æ–­å’Œæˆªæ–­
+			if (vl > best_value) {    // æ‰¾åˆ°æœ€ä½³å€¼(ä½†ä¸èƒ½ç¡®å®šæ˜¯Alphaã€PVè¿˜æ˜¯Betaèµ°æ³•)
+				best_value = vl;        // "best_value"å°±æ˜¯ç›®å‰è¦è¿”å›çš„æœ€ä½³å€¼ï¼Œå¯èƒ½è¶…å‡ºAlpha-Betaè¾¹ç•Œ
+				if (vl >= beta) { // æ‰¾åˆ°ä¸€ä¸ªBetaèµ°æ³•
+					hash_type = HASH_BETA;  // ! å…ˆè®¾å®šå¥½ æ˜¯ä»€ä¹ˆç±»å‹çš„ç½®æ¢è¡¨
+					mvBest = mv;      // Betaèµ°æ³•è¦ä¿å­˜åˆ°å†å²è¡¨
+					break;            // Betaæˆªæ–­
 				}
-				if (vl > vlAlpha) { // ÕÒµ½Ò»¸öPV×ß·¨
-					nHashFlag = HASH_PV;    // ! ÏÈÉè¶¨ºÃ ÊÇÊ²Ã´ÀàĞÍµÄÖÃ»»±í ÏÂÃæ¼ÇÂ¼
-					mvBest = mv;      // PV×ß·¨Òª±£´æµ½ÀúÊ·±í
-					vlAlpha = vl;     // ËõĞ¡Alpha-Beta±ß½ç
+				if (vl > alpha) { // æ‰¾åˆ°ä¸€ä¸ªPVèµ°æ³•
+					hash_type = HASH_PV;    // ! å…ˆè®¾å®šå¥½ æ˜¯ä»€ä¹ˆç±»å‹çš„ç½®æ¢è¡¨ ä¸‹é¢è®°å½•
+					mvBest = mv;      // PVèµ°æ³•è¦ä¿å­˜åˆ°å†å²è¡¨
+					alpha = vl;     // ç¼©å°Alpha-Betaè¾¹ç•Œ
 				}
 			}
 		}
 	}
 
-	// 5. ËùÓĞ×ß·¨¶¼ËÑË÷ÍêÁË£¬°Ñ×î¼Ñ×ß·¨(²»ÄÜÊÇAlpha×ß·¨)±£´æµ½ÀúÊ·±í£¬·µ»Ø×î¼ÑÖµ
-	if (vlBest == -MATE_VALUE) {
-		// Èç¹ûÊÇÉ±Æå£¬¾Í¸ù¾İÉ±Æå²½Êı¸ø³öÆÀ¼Û
+	// 5. æ‰€æœ‰èµ°æ³•éƒ½æœç´¢å®Œäº†ï¼ŒæŠŠæœ€ä½³èµ°æ³•(ä¸èƒ½æ˜¯Alphaèµ°æ³•)ä¿å­˜åˆ°å†å²è¡¨ï¼Œè¿”å›æœ€ä½³å€¼
+	if (best_value == -MATE_VALUE) {
+		// å¦‚æœæ˜¯æ€æ£‹ï¼Œå°±æ ¹æ®æ€æ£‹æ­¥æ•°ç»™å‡ºè¯„ä»·
 		return pos.RootDistance - MATE_VALUE;
 	}
-	// ¼ÇÂ¼µ½ÖÃ»»±í
-	RecordHash(nHashFlag, vlBest, nDepth, mvBest);
+	// è®°å½•åˆ°ç½®æ¢è¡¨
+	RecordHash(hash_type, best_value, depth, mvBest);
 	if (mvBest != 0) {
-		// Èç¹û²»ÊÇAlpha×ß·¨£¬¾Í½«×î¼Ñ×ß·¨±£´æµ½ÀúÊ·±í
-		SetBestMove(mvBest, nDepth);
+		// å¦‚æœä¸æ˜¯Alphaèµ°æ³•ï¼Œå°±å°†æœ€ä½³èµ°æ³•ä¿å­˜åˆ°å†å²è¡¨
+		SetBestMove(mvBest, depth);
 		if (pos.RootDistance == 0) {
-			// ËÑË÷¸ù½ÚµãÊ±£¬×ÜÊÇÓĞÒ»¸ö×î¼Ñ×ß·¨(ÒòÎªÈ«´°¿ÚËÑË÷²»»á³¬³ö±ß½ç)£¬½«Õâ¸ö×ß·¨±£´æÏÂÀ´
+			// æœç´¢æ ¹èŠ‚ç‚¹æ—¶ï¼Œæ€»æ˜¯æœ‰ä¸€ä¸ªæœ€ä½³èµ°æ³•(å› ä¸ºå…¨çª—å£æœç´¢ä¸ä¼šè¶…å‡ºè¾¹ç•Œ)ï¼Œå°†è¿™ä¸ªèµ°æ³•ä¿å­˜ä¸‹æ¥
 			Search.mvResult = mvBest;
 		}
 	}
-	return vlBest;
+	return best_value;
 }
 #else CPP6
-//Alpha - BetaËÑË÷
-//int SearchFull(int vlalpha, int vlbeta, int depth, bool NoNull) {
-//	int vl, vl_best;
-//	int mv, mv_best, mv_hash;
-//	int new_depth;
-//	int hash_type;
-//	SortStruct Sort;
-//
-//	// µ½´ïË®Æ½Ïß£¬µ÷ÓÃ¾²Ì¬ËÑË÷
-//	if (depth <= 0) {
-//		//return SearchQuiesc(vlalpha, vlbeta);
-//		return pos.Evaluate();
-//	}
-//
-//	// ¼ì²éÖØ¸´¾ÖÃæ,·ÀÖ¹³¤½«,Ò²¾ÍÊÇ²»Òª×öÁË
-//	vl = pos.IsRepetitive(); //  ? nRecurÄ¬ÈÏ²ÎÊıÎª1, ²Â²âºÍ¡°ÉÏÒ»´Î²»Í¬¡±¼´¿É
-//	if (vl != 0) {
-//		return pos.RepeatValue(vl);
-//	}
-//
-//	// µ½´ï¼«ÏŞÉî¶È¾Í·µ»Ø¾ÖÃæÆÀ¼Û
-//	if (pos.RootDistance == LIMIT_DEPTH) {
-//		return pos.Evaluate();
-//	}
-//
-//	// ËÑË÷ÖÃ»»±í
-//	vl = ProbeHash(vlalpha, vlbeta, depth, mv_hash);  // ! mv_hash ÒıÓÃ´«²Î
-//	if (vl > -MATE_VALUE) {
-//		return vl; // ? ·µ»ØÁËÒ»²½É±Æå
-//	}
-//
-//	  //ÓĞº¦µÄ×Å×ÓÊÇ·Ç³£º±¼ûµÄ(³ıÁË²Ğ¾ÖÒÔÍâ)¡£Í¨³£Èç¹ûÂÖµ½Äã×ß£¬ÄãÒ»¶¨ÄÜÈÃ¾ÖÃæ¸üºÃĞ©¡£
-//	  //ËùÓĞ¿ÉÄÜµÄ×Å·¨¶¼Ê¹¾ÖÃæ±äµÃ¸üÔã£¬ÕâÑùµÄ¾ÖÃæ³ÆÎª¡°ÎŞµÈ×Å¡±(Zugzwang)(µÂÓï£¬ÒâË¼ÎªÇ¿ÆÈ×Å×Ó)£¬Í¨³£Ö»·¢ÉúÔÚ²Ğ¾ÖÖĞ¡£
-//	  //Òò´Ë£¬¼ÙÉèÄãËÑË÷Ò»¸öÏ£Íû¸ß³ö±ß½çµÄ½áµã(¼´Alpha-BetaËÑË÷µÄ·µ»ØÖµÖÁÉÙÊÇBeta)£¬
-//	  //¿Õ×ÅËÑË÷¾ÍÊÇÏÈËÑË÷¡°ÆúÈ¨¡±×Å·¨¡¾¼´¡°¿Õ×Å¡±(Null-Move)¡¿£¬¼´Ê¹ËüÍ¨³£²»ÊÇ×îºÃµÄ¡£
-//	  //! Èç¹ûÆúÈ¨×Å·¨¸ß³ö±ß½ç£¬ÄÇÃ´ÕæÕı×îºÃµÄ×Å·¨Ò²¿ÉÄÜ¸ß³ö±ß½ç£¬Äã¾Í¿ÉÒÔÖ±½Ó·µ»ØBeta¶ø²»ÒªÔÙÈ¥ËÑË÷ÁË¡£ // ! Ô­Òò£º¿ÉÒÔÄÃµ½Ò»¸öbetaÊ¹µÃ´°¿Ú±äÕ­£¿
-//	  //Òª°ÑËÑË÷×öµÃ¸ü¿ì£¬ÆúÈ¨×Å·¨ËÑË÷µÄÉî¶ÈÍ¨³£±È³£¹æ×Å·¨Ç³¡£
-//	  //Äã±ØĞëĞ¡ĞÄ£¬ÕâÖÖÆô·¢»á¸Ä±äËÑË÷½á¹û£¬Ò²¿ÉÄÜÊ¹ÄãºöÂÔÆå¾ÖÖĞµÄÒ»Ğ©ÖØÒªµÄÏßÂ·¡£
-//	  //²»ÒªÁ¬ĞøÁ½´ÎÓÃ¿Õ×Å(ÒòÎªÕâÑùÄãµÄËÑË÷»áÍË»¯£¬½á¹ûÖ»·µ»ØÆÀ¼Ûº¯Êı)£¬¶øÇÒÒªĞ¡ĞÄ£¬Ö»ÄÜÔÚ²»»á³öÏÖÎŞµÈ×ÅµÄÇé¿öÏÂÊ¹ÓÃ¡£
-//
-//	 //¿Õ²½²Ã¼ô
-//	if (!NoNull && !pos.LastCheck() && pos.NullOkay()) {
-//		pos.MoveNull();
-//		// ? ²ÎÊıÕâÑùĞ´£¿ alpha = vlbeta - 1; beta = vlbeta, -1µÄ×÷ÓÃºÍÔ­ÀíÊÇÊ²Ã´
-//		vl = -SearchFull(-vlbeta, 1 - vlbeta, depth - NULL_DEPTH - 1, NO_NULL);
-//		pos.UndoMoveNull();
-//		if (vl >= vlbeta) {
-//			return vl;
-//		}
-//	}
-//
-//	// ³õÊ¼»¯×ß·¨ÅÅĞò½á¹¹¡¢×î¼ÑÖµºÍ×î¼Ñ×ß·¨
-//	hash_type = HASH_ALPHA;
-//	vl_best = -MATE_VALUE; // ÕâÑù¿ÉÒÔÖªµÀ£¬ÊÇ·ñÒ»¸ö×ß·¨¶¼Ã»×ß¹ı(É±Æå)
-//	mv_best = 0;           // ÕâÑù¿ÉÒÔÖªµÀ£¬ÊÇ·ñËÑË÷µ½ÁËBeta×ß·¨»òPV×ß·¨£¬ÒÔ±ã±£´æµ½ÀúÊ·±í
-//	Sort.Init(mv_hash);
-//	/*
-//	void Init(int mvHash_) { // ³õÊ¼»¯£¬Éè¶¨ÖÃ»»±í×ß·¨ºÍÁ½¸öÉ±ÊÖ×ß·¨
-//	mvHash = mvHash_;
-//	mvKiller1 = Search.mvKillers[pos.nDistance][0]; // ! ¿É¼ûÉ±ÊÖ×ß·¨²»ÊÇÔÚÕâ¸öº¯ÊıÖĞÉú³ÉµÄ£¬¹ÊÊµ¼ÊÉÏÖ»initÁËmvHash
-//	mvKiller2 = Search.mvKillers[pos.nDistance][1];
-//	nPhase = PHASE_HASH;
-//	}
-//	*/
-//
-//	// µİ¹é
-//	while ((mv = Sort.Next()) != 0) {
-//		if (pos.MakeMove(mv)) {
-//			// ½«¾üÑÓÉì  // ! ½«¾üÖ®ºóµÄ×ß·¨ÍùÍù¶¼ºÜÓĞÏ·
-//			new_depth = pos.LastCheck() ? depth : depth - 1;
-//
-//			// PVSËÑË÷  // ! ĞÂÔö
-//			if (vl_best == -MATE_VALUE) {  // ! ¸ù¾İvlBestµÄ³õÊ¼Öµ£¬Èç¹û½øÈëÕâ¸öif¼´ÊÇµÚÒ»´ÎSearchFull
-//				vl = -SearchFull(-vlbeta, -vlalpha, new_depth); // ! µÚÒ»´ÎÀÏÊµËÑË÷
-//			}
-//			else {
-//				/*
-//				¡°AlphaBeta()¡±º¯Êı¾ÍÕı³£µ÷ÓÃ£¬Èç¹ûÕÒµ½ÁËÒ»¸ö£¬ÄÇÃ´Çé¿ö¾Í±äÁË¡£²»ÊÇÓÃ³£¹æµÄ´°¿Ú(Alpha, Beta)£¬
-//				¶øÊÇÓÃ(Alpha, Alpha + 1)À´ËÑË÷¡£ÕâÑù×öµÄÇ°ÌáÊÇ£¬ËÑË÷±ØĞë·µ»ØĞ¡ÓÚ»òµÈÓÚAlphaµÄÖµ£¬
-//				Èç¹ûÈ·ÊµÕâÑù£¬ÄÇÃ´°Ñ´°¿ÚµÄÉÏÃæ²¿·ÖÈ¥µô¾Í»áµ¼ÖÂ¸ü¶àµÄ½Ø¶Ï¡£µ±È»£¬Èç¹ûÇ°ÌáÊÇ´íµÄ£¬
-//				·µ»ØÖµÊÇAlpha + 1»ò¸ü¸ß£¬ÄÇÃ´ËÑË÷±ØĞëÓÃ¿íµÄ´°¿ÚÖØ×ö¡£
-//				*/
-//				vl = -SearchFull(-vlalpha - 1, -vlalpha, new_depth);
-//				if (vl > vlalpha && vl < vlbeta) { // ! ÕÒµ½Ò»¸ö½áµãÊÇPV½áµã
-//												   // ! Ö÷Òª±äÀıËÑË÷×÷ÁË¼ÙÉè£¬Èç¹ûÄãÔÚËÑË÷Ò»¸ö½áµãÊ±ÕÒµ½Ò»¸öPV×Å·¨£¬ÄÇÃ´Äã¾ÍµÃµ½PV½áµã
-//					vl = -SearchFull(-vlbeta, -vlalpha, new_depth);
-//				}
-//			}
-//			pos.UndoMakeMove();
-//
-//			// Alpha-Beta¼ôÖ¦
-//			if (vl > vl_best) {             // ÕÒµ½×î¼ÑÖµ(µ«²»ÄÜÈ·¶¨ÊÇAlpha¡¢PV»¹ÊÇBeta×ß·¨)
-//				vl_best = vl;                 // "vlBest"¾ÍÊÇÄ¿Ç°Òª·µ»ØµÄ×î¼ÑÖµ£¬¿ÉÄÜ³¬³öAlpha-Beta±ß½ç
-//				if (vl >= vlbeta) {         // ÕÒµ½Ò»¸öBeta×ß·¨
-//					hash_type = HASH_BETA;
-//					mv_best = mv;             // Beta×ß·¨Òª±£´æµ½ÀúÊ·±í
-//					break;                    // Beta½Ø¶Ï
-//				}
-//				// ! ÉÏÏÂÁ½¸öifÖ»»á½øÈ¥Ò»¸ö
-//				if (vl > vlalpha) {         // ÕÒµ½Ò»¸öPV×ß·¨
-//					hash_type = HASH_PV;
-//					mv_best = mv;              // PV×ß·¨Òª±£´æµ½ÀúÊ·±í
-//					vlalpha = vl;              // ËõĞ¡Alpha-Beta±ß½ç
-//				}
-//			}
-//		}
-//	}
-//
-//
-//	// 5. ËùÓĞ×ß·¨¶¼ËÑË÷ÍêÁË£¬°Ñ×î¼Ñ×ß·¨(²»ÄÜÊÇAlpha×ß·¨)±£´æµ½ÀúÊ·±í£¬·µ»Ø×î¼ÑÖµ
-//	if (vl_best == -MATE_VALUE) {
-//		// Èç¹ûÊÇÉ±Æå£¬¾Í¸ù¾İÉ±Æå²½Êı¸ø³öÆÀ¼Û  // ?  ÎªÊ²Ã´ÊÇÕâÖÖÆÀ¼Û·½Ê½
-//		return pos.RootDistance - MATE_VALUE;
-//	}
-//	// ¼ÇÂ¼µ½ÖÃ»»±í
-//	RecordHash(hash_type, vl_best, depth, mv_best); // ? ¸Ãº¯ÊıÀïËµ Èç¹ûmv=0¾Í»áreturn£¬'ÎªÁËÎÈ¶¨'
-//	if (mv_best != 0) {
-//		// Èç¹û²»ÊÇAlpha×ß·¨£¬¾Í½«×î¼Ñ×ß·¨±£´æµ½ÀúÊ·±í
-//		// ! Alpha×ß·¨: ËùÓĞ½áµã¶¼±ÈAlphaĞ¡£¬Çé¿ö·Ç³£²î/Alpha¶¼Ã»¸üĞÂ¹ı, Ôò´ËÊ±mvBest¾Í»áÊÇ³õÊ¼»¯Öµ0
-//		// ! ²»ÊÇÔò²»ÊÇalpha×ß·¨
-//		SetBestMove(mv_best, depth);
-//	}
-//	return vl_best;
-//}
+// å®Œæ•´çš„alphabetaæœç´¢
+int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
+	// å˜é‡æ„ä¹‰ï¼š
+
+	// ç»“ç‚¹åˆ†å€¼ç›¸å…³
+	// è¦è®°å½•åˆ°ç½®æ¢è¡¨çš„ç»“ç‚¹ç§ç±»ï¼Œä¸´æ—¶è®°å½•å½“å‰å±€é¢åˆ†å€¼ï¼Œæœ€ä½³alphaå€¼
+	int hash_type, vl, best_value;
+
+	// èµ°æ³•ç›¸å…³
+	// ä¸´æ—¶è®°å½•èµ°æ³•ï¼Œæœ€ä½³èµ°æ³•ï¼Œè¦è®°å½•è‡³ç½®æ¢è¡¨çš„èµ°æ³•
+	int mv, best_mv, hash_mv;
+
+	// å°†å†›å»¶ä¼¸ / ç©ºæ­¥è£å‰ªçš„æ·±åº¦æ›´æ–°
+	int update_depth;
+
+	// èµ°æ³•æ’åº
+	SortMoves Sort;
 
 
-int SearchFull(int vlAlpha, int vlBeta, int nDepth, bool bNoNull) {
-	int nHashFlag, vl, vlBest;
-	int mv, mvBest, mvHash, nNewDepth;
-	SortStruct Sort;
-	// Ò»¸öAlpha-BetaÍêÈ«ËÑË÷·ÖÎªÒÔÏÂ¼¸¸ö½×¶Î
-
-	// 1. µ½´ïË®Æ½Ïß£¬Ôòµ÷ÓÃ¾²Ì¬ËÑË÷(×¢Òâ£ºÓÉÓÚ¿Õ²½²Ã¼ô£¬Éî¶È¿ÉÄÜĞ¡ÓÚÁã)
-	if (nDepth <= 0) {
-		return SearchQuiesc(vlAlpha, vlBeta);
+	// åˆ°è¾¾æ°´å¹³çº¿ï¼Œé™æ€æœç´¢
+	if (depth <= 0) {
+		return QuiescSearch(alpha, beta);
 	}
 
-	// 1-1. ¼ì²éÖØ¸´¾ÖÃæ(×¢Òâ£º²»ÒªÔÚ¸ù½Úµã¼ì²é£¬·ñÔò¾ÍÃ»ÓĞ×ß·¨ÁË) // ! Ä¿µÄÊÇ·ÀÖ¹³¤½«
-	vl = pos.IsRepetitive(); //  ? nRecurÄ¬ÈÏ²ÎÊıÎª1, ²Â²âºÍ¡°ÉÏÒ»´Î²»Í¬¡±¼´¿É
+	// æ£€æŸ¥é‡å¤å±€é¢ ç›®çš„æ˜¯é˜²æ­¢é•¿å°†
+	vl = pos.IsRepetitive(); //  nRecuré»˜è®¤å‚æ•°ä¸º1, å’Œâ€œä¸Šä¸€æ¬¡ä¸åŒâ€å³å¯ï¼Œè‹¥ä¸º3åˆ™æ˜¯æ£€æµ‹é•¿å°†ï¼Œå¯è§isCheckçš„è°ƒç”¨
 	if (vl != 0) {
 		return pos.RepeatValue(vl);
 	}
 
-	// 1-2. µ½´ï¼«ÏŞÉî¶È¾Í·µ»Ø¾ÖÃæÆÀ¼Û
+	// è™½ç„¶æ˜¯è¿­ä»£åŠ æ·±ï¼Œç”¨å°½æ—¶é—´å³å¯ï¼Œä½†æˆ‘ä»¬ä»ç„¶è®¾ç½®äº†æé™æ·±åº¦ï¼Œåˆ°è¾¾å°±è¿”å›å±€é¢è¯„ä»·
 	if (pos.RootDistance == LIMIT_DEPTH) {
 		return pos.Evaluate();
 	}
 
-	// 1-3. ³¢ÊÔÖÃ»»±í²Ã¼ô£¬²¢µÃµ½ÖÃ»»±í×ß·¨
-	vl = ProbeHash(vlAlpha, vlBeta, nDepth, mvHash);  // ! mvHash ÒıÓÃ´«²Î
+	// æŸ¥çœ‹ç½®æ¢è¡¨ï¼Œçœ‹ä»¥å‰æ˜¯å¦èµ°è¿‡ï¼ŒèŠ‚çº¦æ—¶é—´
+	// ç½®æ¢è¡¨ä¸­å­˜å‚¨äº†å½“æ—¶èµ°é‚£ä¸ªèµ°æ³•çš„ä¸€äº›é‡è¦çš„å±€é¢ä¿¡æ¯
+	vl = ProbeHash(alpha, beta, depth, hash_mv);  // æ³¨æ„ï¼hash_mv å¼•ç”¨ä¼ å‚
 	if (vl > -MATE_VALUE) {
-		return vl; // ? ·µ»ØÁËÒ»²½É±Æå
+		return vl; // è¿”å›äº†ä¸€æ­¥æ€æ£‹
 	}
 
-	//  ÓĞº¦µÄ×Å×ÓÊÇ·Ç³£º±¼ûµÄ(³ıÁË²Ğ¾ÖÒÔÍâ)¡£Í¨³£Èç¹ûÂÖµ½Äã×ß£¬ÄãÒ»¶¨ÄÜÈÃ¾ÖÃæ¸üºÃĞ©¡£
-	//  ËùÓĞ¿ÉÄÜµÄ×Å·¨¶¼Ê¹¾ÖÃæ±äµÃ¸üÔã£¬ÕâÑùµÄ¾ÖÃæ³ÆÎª¡°ÎŞµÈ×Å¡±(Zugzwang)(µÂÓï£¬ÒâË¼ÎªÇ¿ÆÈ×Å×Ó)£¬Í¨³£Ö»·¢ÉúÔÚ²Ğ¾ÖÖĞ¡£
-	//  Òò´Ë£¬¼ÙÉèÄãËÑË÷Ò»¸öÏ£Íû¸ß³ö±ß½çµÄ½áµã(¼´Alpha-BetaËÑË÷µÄ·µ»ØÖµÖÁÉÙÊÇBeta)£¬
-	//  ¿Õ×ÅËÑË÷¾ÍÊÇÏÈËÑË÷¡°ÆúÈ¨¡±×Å·¨¡¾¼´¡°¿Õ×Å¡±(Null-Move)¡¿£¬¼´Ê¹ËüÍ¨³£²»ÊÇ×îºÃµÄ¡£
-	//  ! Èç¹ûÆúÈ¨×Å·¨¸ß³ö±ß½ç£¬ÄÇÃ´ÕæÕı×îºÃµÄ×Å·¨Ò²¿ÉÄÜ¸ß³ö±ß½ç£¬Äã¾Í¿ÉÒÔÖ±½Ó·µ»ØBeta¶ø²»ÒªÔÙÈ¥ËÑË÷ÁË¡£ // ! Ô­Òò£º¿ÉÒÔÄÃµ½Ò»¸öbetaÊ¹µÃ´°¿Ú±äÕ­£¿
-	//  Òª°ÑËÑË÷×öµÃ¸ü¿ì£¬ÆúÈ¨×Å·¨ËÑË÷µÄÉî¶ÈÍ¨³£±È³£¹æ×Å·¨Ç³¡£
-	//  Äã±ØĞëĞ¡ĞÄ£¬ÕâÖÖÆô·¢»á¸Ä±äËÑË÷½á¹û£¬Ò²¿ÉÄÜÊ¹ÄãºöÂÔÆå¾ÖÖĞµÄÒ»Ğ©ÖØÒªµÄÏßÂ·¡£
-	//  ²»ÒªÁ¬ĞøÁ½´ÎÓÃ¿Õ×Å(ÒòÎªÕâÑùÄãµÄËÑË÷»áÍË»¯£¬½á¹ûÖ»·µ»ØÆÀ¼Ûº¯Êı)£¬¶øÇÒÒªĞ¡ĞÄ£¬Ö»ÄÜÔÚ²»»á³öÏÖÎŞµÈ×ÅµÄÇé¿öÏÂÊ¹ÓÃ¡£
-
-	// 1-4. ³¢ÊÔ¿Õ²½²Ã¼ô(¸ù½ÚµãµÄBetaÖµÊÇ"MATE_VALUE"£¬ËùÒÔ²»¿ÉÄÜ·¢Éú¿Õ²½²Ã¼ô)
-	if (!bNoNull && !pos.LastCheck() && pos.NullOkay()) {
+	//  ç©ºç€æœç´¢, å…ˆæœç´¢â€œå¼ƒæƒâ€ç€æ³• 
+	//  å› ä¸ºæ— è®ºæ˜¯è°ï¼Œèµ°ä¸€æ­¥æ€»ä¼šä½¿æƒ…å†µå˜å¥½ï¼Œé‚£ä¹ˆä¸èµ°çš„æƒ…å†µä¸‹è¿˜èƒ½æˆªæ–­ï¼ˆæƒ…å†µå¥½ï¼‰ï¼Œé‚£ä¹ˆèµ°äº†ä¹Ÿå¤§æ¦‚ç‡æˆªæ–­
+	//  æ•…å¦‚æœå¼ƒæƒç€æ³•é«˜å‡ºè¾¹ç•Œï¼Œé‚£ä¹ˆçœŸæ­£æœ€å¥½çš„ç€æ³•ä¹Ÿå¯èƒ½é«˜å‡ºè¾¹ç•Œï¼Œå°±å¯ä»¥ç›´æ¥è¿”å›Betaè€Œä¸è¦å†å»æœç´¢äº†
+	if (!no_null_cut && !pos.LastCheck() && pos.NullOkay()) {
 		pos.MoveNull();
-		// ? ²ÎÊıÕâÑùĞ´£¿ alpha = vlBeta - 1; beta = vlBeta, -1µÄ×÷ÓÃºÍÔ­ÀíÊÇÊ²Ã´
-		vl = -SearchFull(-vlBeta, 1 - vlBeta, nDepth - NULL_DEPTH - 1, NO_NULL);
+		// å‚æ•°è¿™æ ·å†™ï¼Ÿ alpha = beta - 1; beta = beta, -1çš„ä½œç”¨å’ŒåŸç†
+		// æ˜¯ä¸ºäº†ç¼©å°æœç´¢çª—å£ åŠ å¤§æˆªæ–­çš„æ¦‚ç‡ï¼Œå› ä¸ºæˆ‘ä»¬åªæƒ³çŸ¥é“â€œæœ‰æ²¡æœ‰æˆªæ–­â€ï¼Œè€Œä¸æ˜¯æˆªæ–­â€œå¥½ä¸å¥½â€
+		vl = -WholeSearch(-beta, 1 - beta, depth - NULL_DEPTH - 1, NO_NULL);
 		pos.UndoMoveNull();
-		if (vl >= vlBeta) {
+		if (vl >= beta) {
 			return vl;
 		}
 	}
 
-	// 2. ³õÊ¼»¯×î¼ÑÖµºÍ×î¼Ñ×ß·¨
-	nHashFlag = HASH_ALPHA;
-	vlBest = -MATE_VALUE; // ÕâÑù¿ÉÒÔÖªµÀ£¬ÊÇ·ñÒ»¸ö×ß·¨¶¼Ã»×ß¹ı(É±Æå)
-	mvBest = 0;           // ÕâÑù¿ÉÒÔÖªµÀ£¬ÊÇ·ñËÑË÷µ½ÁËBeta×ß·¨»òPV×ß·¨£¬ÒÔ±ã±£´æµ½ÀúÊ·±í
-
-						  // 3. ³õÊ¼»¯×ß·¨ÅÅĞò½á¹¹
-	Sort.Init(mvHash);
-	//"
-	//	void Init(int mvHash_) { // ³õÊ¼»¯£¬Éè¶¨ÖÃ»»±í×ß·¨ºÍÁ½¸öÉ±ÊÖ×ß·¨
-	//	mvHash = mvHash_;
-	//	mvKiller1 = Search.mvKillers[pos.nDistance][0]; // ! ¿É¼ûÉ±ÊÖ×ß·¨²»ÊÇÔÚÕâ¸öº¯ÊıÖĞÉú³ÉµÄ£¬¹ÊÊµ¼ÊÉÏÖ»initÁËmvHash
-	//	mvKiller2 = Search.mvKillers[pos.nDistance][1];
-	//	nPhase = PHASE_HASH;
-	//}
-	//"
-		// 4. ÖğÒ»×ßÕâĞ©×ß·¨£¬²¢½øĞĞµİ¹é
-		while ((mv = Sort.Next()) != 0) {
-			if (pos.MakeMove(mv)) {
-				// ½«¾üÑÓÉì  // ?
-				nNewDepth = pos.LastCheck() ? nDepth : nDepth - 1;
-
-				// PVS  // ! ĞÂÔö
-				if (vlBest == -MATE_VALUE) {  // ! ¸ù¾İvlBestµÄ³õÊ¼Öµ£¬Èç¹û½øÈëÕâ¸öif¼´ÊÇµÚÒ»´ÎSearchFull
-					vl = -SearchFull(-vlBeta, -vlAlpha, nNewDepth); // ! µÚÒ»´ÎÀÏÊµËÑË÷
-				}
-				else {
-					/*"
-						¡°AlphaBeta()¡±º¯Êı¾ÍÕı³£µ÷ÓÃ£¬Èç¹ûÕÒµ½ÁËÒ»¸ö£¬ÄÇÃ´Çé¿ö¾Í±äÁË¡£²»ÊÇÓÃ³£¹æµÄ´°¿Ú(Alpha, Beta)£¬
-						¶øÊÇÓÃ(Alpha, Alpha + 1)À´ËÑË÷¡£ÕâÑù×öµÄÇ°ÌáÊÇ£¬ËÑË÷±ØĞë·µ»ØĞ¡ÓÚ»òµÈÓÚAlphaµÄÖµ£¬
-						Èç¹ûÈ·ÊµÕâÑù£¬ÄÇÃ´°Ñ´°¿ÚµÄÉÏÃæ²¿·ÖÈ¥µô¾Í»áµ¼ÖÂ¸ü¶àµÄ½Ø¶Ï¡£µ±È»£¬Èç¹ûÇ°ÌáÊÇ´íµÄ£¬
-						·µ»ØÖµÊÇAlpha + 1»ò¸ü¸ß£¬ÄÇÃ´ËÑË÷±ØĞëÓÃ¿íµÄ´°¿ÚÖØ×ö¡£
-						"*/
-						vl = -SearchFull(-vlAlpha - 1, -vlAlpha, nNewDepth);
-					if (vl > vlAlpha && vl < vlBeta) { // ! ÕÒµ½Ò»¸ö½áµãÊÇPV½áµã
-													   // ! Ö÷Òª±äÀıËÑË÷×÷ÁË¼ÙÉè£¬Èç¹ûÄãÔÚËÑË÷Ò»¸ö½áµãÊ±ÕÒµ½Ò»¸öPV×Å·¨£¬ÄÇÃ´Äã¾ÍµÃµ½PV½áµã
-						vl = -SearchFull(-vlBeta, -vlAlpha, nNewDepth);
-					}
-				}
-				pos.UndoMakeMove();
-
-				// 5. ½øĞĞAlpha-Beta´óĞ¡ÅĞ¶ÏºÍ½Ø¶Ï
-				if (vl > vlBest) {    // ÕÒµ½×î¼ÑÖµ(µ«²»ÄÜÈ·¶¨ÊÇAlpha¡¢PV»¹ÊÇBeta×ß·¨)
-					vlBest = vl;        // "vlBest"¾ÍÊÇÄ¿Ç°Òª·µ»ØµÄ×î¼ÑÖµ£¬¿ÉÄÜ³¬³öAlpha-Beta±ß½ç
-					if (vl >= vlBeta) { // ÕÒµ½Ò»¸öBeta×ß·¨
-						nHashFlag = HASH_BETA;
-						mvBest = mv;      // Beta×ß·¨Òª±£´æµ½ÀúÊ·±í
-						break;            // Beta½Ø¶Ï
-					}
-					// ! ÉÏÏÂÁ½¸öifÖ»»á½øÈ¥Ò»¸ö
-					if (vl > vlAlpha) { // ÕÒµ½Ò»¸öPV×ß·¨
-						nHashFlag = HASH_PV;
-						mvBest = mv;      // PV×ß·¨Òª±£´æµ½ÀúÊ·±í
-						vlAlpha = vl;     // ËõĞ¡Alpha-Beta±ß½ç
-					}
-				}
-			}
-		}
-
-	// 5. ËùÓĞ×ß·¨¶¼ËÑË÷ÍêÁË£¬°Ñ×î¼Ñ×ß·¨(²»ÄÜÊÇAlpha×ß·¨)±£´æµ½ÀúÊ·±í£¬·µ»Ø×î¼ÑÖµ
-	if (vlBest == -MATE_VALUE) {
-		// Èç¹ûÊÇÉ±Æå£¬¾Í¸ù¾İÉ±Æå²½Êı¸ø³öÆÀ¼Û  // ?  ÎªÊ²Ã´ÊÇÕâÖÖÆÀ¼Û·½Ê½
-		return pos.RootDistance - MATE_VALUE;
-	}
-	// ¼ÇÂ¼µ½ÖÃ»»±í
-	RecordHash(nHashFlag, vlBest, nDepth, mvBest); // ? ¸Ãº¯ÊıÀïËµ Èç¹ûmv=0¾Í»áreturn£¬'ÎªÁËÎÈ¶¨'
-	if (mvBest != 0) {
-		// Èç¹û²»ÊÇAlpha×ß·¨£¬¾Í½«×î¼Ñ×ß·¨±£´æµ½ÀúÊ·±í
-		// ! Alpha×ß·¨: ËùÓĞ½áµã¶¼±ÈAlphaĞ¡£¬Çé¿ö·Ç³£²î/Alpha¶¼Ã»¸üĞÂ¹ı, Ôò´ËÊ±mvBest¾Í»áÊÇ³õÊ¼»¯Öµ0
-		// ! ²»ÊÇÔò²»ÊÇalpha×ß·¨
-		SetBestMove(mvBest, nDepth);
-	}
-	return vlBest;
-}
-#endif // CPP3
-
-
-
-// ¸ù½ÚµãµÄAlpha-BetaËÑË÷¹ı³Ì
-static int SearchRoot(int nDepth) {
-	int vl, vlBest, mv, nNewDepth;
-	SortStruct Sort;
-
-	vlBest = -MATE_VALUE;
-	Sort.Init(Search.mvResult);
-	while ((mv = Sort.Next()) != 0) {
+	// åˆå§‹åŒ–æœ€ä½³å€¼å’Œæœ€ä½³èµ°æ³•
+	hash_type = HASH_ALPHA;	  // ä¿å­˜åˆ°ç½®æ¢è¡¨çš„æ—¶å€™éœ€è¦æ³¨æ˜æ˜¯å“ªç§èµ°æ³•
+	best_mv = 0;			  // åˆ¤æ–­=0å°±å¯ä»¥çŸ¥é“æ˜¯å¦æœç´¢åˆ°äº†Betaèµ°æ³•æˆ–PVèµ°æ³•ï¼Œä»¥ä¾¿ä¿å­˜åˆ°å†å²è¡¨
+	best_value = -MATE_VALUE; // åˆ¤æ–­=-MATE_VALUEè¿™æ ·å¯ä»¥çŸ¥é“ï¼Œæ˜¯å¦ä¸€ä¸ªèµ°æ³•éƒ½æ²¡èµ°è¿‡(æ€æ£‹)
+	           
+	// åˆå§‹åŒ–èµ°æ³•æ’åº
+	Sort.Init(hash_mv);
+	
+	// èµ°èµ°æ³•ï¼Œé€’å½’
+	while ((mv = Sort.GetNextMv()) != 0) {  // æ¯æ¬¡åå‡ºä¸‹ä¸€ä¸ªèµ°æ³•
 		if (pos.MakeMove(mv)) {
-			nNewDepth = pos.LastCheck() ? nDepth : nDepth - 1;
-			if (vlBest == -MATE_VALUE) {
-				vl = -SearchFull(-MATE_VALUE, MATE_VALUE, nNewDepth, NO_NULL);
+			// å°†å†›å»¶ä¼¸ è®¤ä¸ºå°†å†›çš„èµ°æ³•æ¥ä¸‹æ¥éƒ½å¾ˆæœ‰æˆ
+			update_depth = pos.LastCheck() ? depth : depth - 1;
+
+			// PVS æœç´¢ å…·ä½“åŸç†è§æŠ¥å‘Š4.3
+			if (best_value == -MATE_VALUE) {  // ! æ ¹æ®best_valueçš„åˆå§‹å€¼ï¼Œå¦‚æœè¿›å…¥è¿™ä¸ªifå³æ˜¯ç¬¬ä¸€æ¬¡WholeSearch
+				vl = -WholeSearch(-beta, -alpha, update_depth); // ! ç¬¬ä¸€æ¬¡è¿˜æ˜¯å¾—è€å®æœç´¢
 			}
 			else {
-				vl = -SearchFull(-vlBest - 1, -vlBest, nNewDepth);
-				if (vl > vlBest) {
-					vl = -SearchFull(-MATE_VALUE, -vlBest, nNewDepth, NO_NULL);
+				// ä¸æ˜¯ç”¨å¸¸è§„çš„çª—å£(Alpha, Beta)ï¼Œè€Œæ˜¯ç”¨(Alpha, Alpha + 1)æ¥æœç´¢ã€‚
+				// è¿™æ ·åšçš„å‰ææ˜¯ï¼Œæœç´¢å¿…é¡»è¿”å›å°äºæˆ–ç­‰äºAlphaçš„å€¼ï¼Œ
+				vl = -WholeSearch(-alpha - 1, -alpha, update_depth);
+				if (vl > alpha && vl < beta) { // ! æ‰¾åˆ°ä¸€ä¸ªç»“ç‚¹æ˜¯PVç»“ç‚¹
+					// ! ä¸»è¦å˜ä¾‹æœç´¢ä½œäº†å‡è®¾ï¼Œå¦‚æœä½ åœ¨æœç´¢ä¸€ä¸ªç»“ç‚¹æ—¶æ‰¾åˆ°ä¸€ä¸ªPVç€æ³•ï¼Œé‚£ä¹ˆä½ å°±å¾—åˆ°PVç»“ç‚¹
+					vl = -WholeSearch(-beta, -alpha, update_depth);
 				}
 			}
 			pos.UndoMakeMove();
-			if (vl > vlBest) {
-				vlBest = vl;
-				Search.mvResult = mv;
-				if (vlBest > -WIN_VALUE && vlBest < WIN_VALUE) {
-					vlBest += (rand() & RANDOM_MASK) - (rand() & RANDOM_MASK);
+
+			// Alpha-Betaæˆªæ–­
+			if (vl > best_value) {    
+				best_value = vl;        
+				if (vl >= beta) { 
+					hash_type = HASH_BETA;
+					best_mv = mv;     
+					break;           
+				}
+				// ! ä¸Šä¸‹ä¸¤ä¸ªifåªä¼šè¿›å»ä¸€ä¸ª
+				if (vl > alpha) {
+					hash_type = HASH_PV;
+					best_mv = mv;      
+					alpha = vl;     
 				}
 			}
 		}
 	}
-	RecordHash(HASH_PV, vlBest, nDepth, Search.mvResult);
-	SetBestMove(Search.mvResult, nDepth);
-	return vlBest;
+
+	// å¦‚æœæ˜¯æ€æ£‹ï¼Œå°±æ ¹æ®æ€æ£‹æ­¥æ•°ç»™å‡ºè¯„ä»·
+	if (best_value == -MATE_VALUE) {
+		return pos.RootDistance - MATE_VALUE;
+	}
+
+	// æŠŠæœ€ä½³èµ°æ³•ä¿å­˜ï¼Œè¿”å›æœ€ä½³å€¼
+	// è®°å½•åˆ°ç½®æ¢è¡¨
+	RecordHash(hash_type, best_value, depth, best_mv);
+	if (best_mv != 0) {
+		// å¦‚æœä¸æ˜¯Alphaèµ°æ³•ï¼Œå°±å°†æœ€ä½³èµ°æ³•ä¿å­˜åˆ°å†å²è¡¨
+		// ! Alphaèµ°æ³•: æ‰€æœ‰ç»“ç‚¹éƒ½æ¯”Alphaå°ï¼Œæƒ…å†µéå¸¸å·®/Alphaéƒ½æ²¡æ›´æ–°è¿‡, åˆ™æ­¤æ—¶best_mvå°±ä¼šæ˜¯åˆå§‹åŒ–å€¼0
+		// ! ä¸æ˜¯åˆ™ä¸æ˜¯alphaèµ°æ³•
+		SetBestMove(best_mv, depth);
+	}
+	return best_value;
+}
+#endif
+
+// é¦–æ­¥Alpha-Betaæœç´¢
+// ä¸ºä»€ä¹ˆè¦åŒºåˆ†ç¬¬ä¸€æ¬¡ï¼ˆæ ¹èŠ‚ç‚¹ï¼‰å’Œå…¶å®ƒç»“ç‚¹ï¼Ÿå› ä¸ºå¾ˆå¤šä¼˜åŒ–å’Œå¯å‘å¯¹ç¬¬ä¸€æ¬¡æœç´¢æ— æ•ˆå¹¶ä¸”æœ‰åä½œç”¨
+static int FirstSearch(int depth) {
+	// ä¸´æ—¶å˜é‡è®°å½•å±€é¢åˆ†å€¼ï¼Œæœ€å¥½çš„èµ°æ³•ï¼Œä¸´æ—¶å˜é‡è®°å½•å½“å‰èµ°æ³•ï¼Œæ›´æ–°æ·±åº¦
+	int vl, best_value, mv, update_depth;
+	SortMoves Sort;
+
+	best_value = -MATE_VALUE;	// åˆå§‹åŒ–å€¼ï¼Œå¯ç”¨äºåˆ¤æ–­
+
+	// åˆå§‹åŒ–èµ°æ³•è¡¨
+	Sort.Init(Search.mvResult);
+
+	// å¾ªç¯èµ°æ³•
+	while ((mv = Sort.GetNextMv()) != 0) {
+		if (pos.MakeMove(mv)) {
+			update_depth = pos.LastCheck() ? depth : depth - 1;
+
+			// PVSæœç´¢ï¼ŒåŸç†è§æŠ¥å‘Šæˆ–WholeSearch
+			if (best_value == -MATE_VALUE) {
+				vl = -WholeSearch(-MATE_VALUE, MATE_VALUE, update_depth, NO_NULL);
+			}
+			else {
+				vl = -WholeSearch(-best_value - 1, -best_value, update_depth);
+				if (vl > best_value) {
+					vl = -WholeSearch(-MATE_VALUE, -best_value, update_depth, NO_NULL);
+				}
+			}
+			pos.UndoMakeMove();
+			if (vl > best_value) {
+				best_value = vl;
+				Search.mvResult = mv;
+				if (best_value > -WIN_VALUE && best_value < WIN_VALUE) {
+					// å¢åŠ éšæœºæ€§ ä»¥åŠ å¼ºç¨³å®šæ€§
+					best_value += (rand() & RANDOM_MASK) - (rand() & RANDOM_MASK);
+				}
+			}
+		}
+	}
+
+	// åšå¥½è®°å½•
+	RecordHash(HASH_PV, best_value, depth, Search.mvResult);
+	SetBestMove(Search.mvResult, depth);
+	return best_value;
 }
 
-// ËÑË÷µÄ¶¥²ãµ÷ÓÃ
-void SearchMain(clock_t time_limit) {
+// æœç´¢çš„é¡¶å±‚è°ƒç”¨
+void TopSearch(clock_t time_limit) {
 	int i, t, vl, n_mvs;
 	int mvs[MAX_GEN_MOVES];
 
-	// ³õÊ¼»¯
-	memset(Search.nHistoryTable, 0, 65536 * sizeof(int));       // Çå¿ÕÀúÊ·±í
-	memset(Search.mvKillers, 0, LIMIT_DEPTH * 2 * sizeof(int)); // Çå¿ÕÉ±ÊÖ×ß·¨±í
-	memset(Search.HashTable, 0, HASH_SIZE * sizeof(HashItem));  // Çå¿ÕÖÃ»»±í
-	t = clock();                                                // ³õÊ¼»¯¶¨Ê±Æ÷
-	pos.RootDistance = 0; // ³õÊ¼²½Êı
+	// åˆå§‹åŒ–
+	t = clock(); // åˆå§‹åŒ–å®šæ—¶å™¨
+	memset(Search.nHistoryTable, 0, 65536 * sizeof(int)); // æ¸…ç©ºå†å²è¡¨
+	memset(Search.mvKillers, 0, LIMIT_DEPTH * 2 * sizeof(int)); // æ¸…ç©ºæ€æ‰‹èµ°æ³•è¡¨
+	memset(Search.HashTable, 0, HASH_SIZE * sizeof(HashItem)); // æ¸…ç©ºç½®æ¢è¡¨
+	pos.RootDistance = 0; // åˆå§‹æ­¥æ•°
 
-
-
+	// å¼€å±€åº“
 	Search.mvResult = SearchBook();
+#ifdef DEBUG
+	printf("Openbook: %x\n", Search.mvResult);
+#endif // DEBUG
+
 	if (Search.mvResult != 0) {
 		pos.MakeMove(Search.mvResult);
 		if (pos.IsRepetitive(3) == 0) {
@@ -732,8 +614,7 @@ void SearchMain(clock_t time_limit) {
 		pos.UndoMakeMove();
 	}
 
-
-						  // ¼ì²éÊÇ·ñÖ»ÓĞÎ¨Ò»×ß·¨
+	// æ£€æŸ¥æ˜¯å¦åªæœ‰å”¯ä¸€èµ°æ³•
 	vl = 0;
 	n_mvs = pos.GenerateMoves(mvs);
 #ifdef DEBUG
@@ -753,17 +634,46 @@ void SearchMain(clock_t time_limit) {
 		return;
 	}
 
-	// µü´ú¼ÓÉî¹ı³Ì
+	clock_t t_init = clock() - t;
+	clock_t t_sum = t_init;
+	int decay_factor = 1;
+	// è¿­ä»£åŠ æ·±è¿‡ç¨‹
 	for (i = 1; i <= LIMIT_DEPTH; i++) {
-		vl = SearchRoot(i);
-		//vl = SearchFull(-MATE_VALUE, MATE_VALUE, i);
-		// ËÑË÷µ½É±Æå£¬¾ÍÖÕÖ¹ËÑË÷
+		clock_t this_start = clock();
+		vl = FirstSearch(i);
+
+		// æœç´¢åˆ°æ€æ£‹ï¼Œå°±ç»ˆæ­¢æœç´¢
 		if (vl > WIN_VALUE || vl < -WIN_VALUE) {
-			break; // ! É±Æå¶¼ÊÇ nDistance - 	VALUE_MATE
+			break; // ! æ€æ£‹éƒ½æ˜¯ nDistance - Â Â Â VALUE_MATE
 		}
-		// ³¬¹ıÒ»Ãë£¬¾ÍÖÕÖ¹ËÑË÷
-		if (clock() - t > time_limit - 10) { // ! ¼õµôÒ»µãµãÊ±¼ä ÒÔ·ÀÍòÒ» ÈÃÓĞ×ã¹»µÄÊ±¼äÉú³Ébestmove×Ö·û´®
+		clock_t this_time = clock() - this_start;
+
+		t_sum += this_time;
+		//è¡°å‡åˆ¤æ–­
+		if (i < 10) {
+			decay_factor = 5;
+		}
+		else if (i >= 10 && i < 20) {
+			decay_factor = 4;
+		}
+		else if (i >= 20 && i < 30) {
+			decay_factor = 3;
+		}
+		else {
+			decay_factor = 2;
+		}
+
+		// é€€å‡ºæœç´¢åˆ¤æ–­
+		// -10æ˜¯ä¸ºäº†ä»¥é˜²ä¸‡ä¸€
+		if (time_limit - 10 - t_sum < this_time * decay_factor) {
+#ifdef DEBUG
+			printf("dt: %d\n", time_limit - 10 - t_sum);
+			printf("t: %d\n", this_time);
+#endif // DEBUG
 			break;
 		}
+#ifdef DEBUG
+		printf("t: %d\n", this_time);
+#endif // DEBUG
 	}
 }
