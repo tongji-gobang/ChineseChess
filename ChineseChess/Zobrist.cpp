@@ -21,7 +21,7 @@ RC4Struct::RC4Struct()
 }
 
 //生成下一字节的流密码
-BYTE RC4Struct::NextByte()
+BYTE RC4Struct::GenByte()
 {
 	BYTE temp;
 	x = (x + 1) & 255;
@@ -32,66 +32,64 @@ BYTE RC4Struct::NextByte()
 	return s[(s[x] + s[y]) & 255];
 }
 
-DWORD RC4Struct::NextLong()
+DWORD RC4Struct::Gen4Byte()
 {
 	BYTE t0, t1, t2, t3;
-	t0 = NextByte();
-	t1 = NextByte();
-	t2 = NextByte();
-	t3 = NextByte();
+	t0 = GenByte();
+	t1 = GenByte();
+	t2 = GenByte();
+	t3 = GenByte();
 	return t0 + (t1 << 8) + (t2 << 16) + (t3 << 24);
 }
 
 // 构造函数，相当于InitZero
 ZobristStruct::ZobristStruct()
 {
-	dwKey = 0;
-	dwLock0 = 0;
-	dwLock1 = 0;
+	key0 = 0;
+	key1 = 0;
+	key2 = 0;
 }
 
 ZobristStruct::ZobristStruct(DWORD Key, DWORD Lock0, DWORD Lock1)
 {
-	dwKey = Key;
-	dwLock0 = Lock0;
-	dwLock1 = Lock1;
+	key0 = Key;
+	key1 = Lock0;
+	key2 = Lock1;
 }
 
 // 用零填充Zobrist
 void ZobristStruct::InitZero()
 {
-	dwKey = 0;
-	dwLock0 = 0;
-	dwLock1 = 0;
+	key0 = 0;
+	key1 = 0;
+	key2 = 0;
 }
 
 // 用密码流填充Zobrist
 void ZobristStruct::InitRC4(RC4Struct &rc4)
 {
-	dwKey = rc4.NextLong();
-	dwLock0 = rc4.NextLong();
-	dwLock1 = rc4.NextLong();
+	key0 = rc4.Gen4Byte();
+	key1 = rc4.Gen4Byte();
+	key2 = rc4.Gen4Byte();
 }
 
 // Zobrist结构的异或运算
 ZobristStruct ZobristStruct::operator^(const ZobristStruct &zobr)
 {
-	ZobristStruct t(dwKey ^ zobr.dwKey,
-		dwLock0 ^ zobr.dwLock0,
-		dwLock1 ^ zobr.dwLock1);
+	ZobristStruct t(key0 ^ zobr.key0,
+		key1 ^ zobr.key1,
+		key2 ^ zobr.key2);
 	return t;
 }
 
-// 相当于原代码中的Xor
 ZobristStruct ZobristStruct::operator^=(const ZobristStruct &zobr)
 {
-	dwKey ^= zobr.dwKey;
-	dwLock0 ^= zobr.dwLock0;
-	dwLock1 ^= zobr.dwLock1;
+	key0 ^= zobr.key0;
+	key1 ^= zobr.key1;
+	key2 ^= zobr.key2;
 	return *this;
 }
 
-// 相当于原代码中的InitZobrist
 Zobrist::Zobrist()
 {
 	int i, j;
@@ -108,9 +106,9 @@ Zobrist::Zobrist()
 #ifdef DEBUG
 ostream& operator<< (ostream &out, ZobristStruct &zobr)
 {
-	out << setw(8) << setfill('0') << zobr.dwKey;
-	out << setw(8) << setfill('0') << zobr.dwLock0;
-	out << setw(8) << setfill('0') << zobr.dwLock1;
+	out << setw(8) << setfill('0') << zobr.key0;
+	out << setw(8) << setfill('0') << zobr.key1;
+	out << setw(8) << setfill('0') << zobr.key2;
 	return out;
 }
 

@@ -25,80 +25,80 @@ void SetBestMove(int mv, int depth) {
 	}
 }
 
-// 静态搜索
+// 静态搜索：克服水平线效应
 int QuiescSearch(int alpha, int beta) {
 	int i, movenum;
 	int value, best;
 	int mvs[MAX_GEN_MOVES];
 
-	// 1. 检查重复局面
+	//检查重复局面
 	value = pos.IsRepetitive();
 	if (value != 0)
-		return pos.RepeatValue(value);	// 若重复则返回相应的重复分
+		return pos.RepeatValue(value);	//若重复则返回相应的重复分
 
-	// 2. 限制搜索深度
+	//限制搜索深度，避免搜索过深
 	if (pos.RootDistance == LIMIT_DEPTH)
 		return pos.Evaluate();
 
-	// 3. 最佳值设为杀棋分
-	best = -MATE_VALUE; // 这样可以知道，是否一个走法都没走过(杀棋)
+	//最佳值设为杀棋分，若最后best没有更改，则被杀
+	best = -MATE_VALUE;
 
 	if (pos.LastCheck()) {
-		// 4. 如果被将军，则生成全部走法
+		//如果被将军，则生成全部走法
 		movenum = pos.GenerateMoves(mvs);
 		qsort(mvs, movenum, sizeof(int), CompareHistory);
 	}
 	else {
 
-		// 5. 如果不被将军，先评价当前局面
+		//如果不被将军，先评价当前局面
 		value = pos.Evaluate();
-		if (value > best) {			// 找到最佳值
+		if (value > best) {			//找到最佳值
 			best = value;
-			if (value >= beta) {	// 找到beta走法
-				return value;		// 评价好得足以截断而不需要试图吃子
+			if (value >= beta) {	//找到beta走法
+				return value;		//评价好得足以截断而不需要试图吃子
 			}
-			if (value > alpha) {
+			if (value > alpha) {	//找到一个PV走法
 				alpha = value;
 			}
 		}
 
-		// 6. 如果局面评价没有截断，再考虑吃子走法
-		movenum = pos.GenerateMoves(mvs, GEN_CAPTURE);
+		//如果局面评价没有截断，再考虑吃子走法
+		movenum = pos.GenerateMoves(mvs, GEN_CAPTURE);		//生成所有吃子走法
 		qsort(mvs, movenum, sizeof(int), CompareMvvLva);	//按MVVLVA排序吃子着法
 	}
 
-	// 7. 逐一走这些走法，并进行递归
+	//对每一种吃子走法进行递归
 	for (i = 0; i < movenum; ++i) {
 		//int PieceCaptured;
 		if (pos.MakeMove(mvs[i])) {
 			value = -QuiescSearch(-beta, -alpha);
 			pos.UndoMakeMove();
 
-			// 8. 进行Alpha-Beta大小判断和截断
-			if (value > best) {		// 找到最佳值(但不能确定是Alpha、PV还是Beta走法)
-				best = value;		// "best"就是目前要返回的最佳值，可能超出Alpha-Beta边界
-				if (value >= beta) {// 找到一个Beta走法
+			//进行Alpha-Beta大小判断和截断
+			if (value > best) {			//找到最佳值
+				best = value;
+				if (value >= beta) {	//找到一个beta走法
 					return value;
 				}
-				if (value > alpha) {	// 找到一个PV走法
-					alpha = value;		// 更新alpha，缩小Alpha-Beta边界
+				if (value > alpha) {	//找到一个PV走法
+					alpha = value;		//更新alpha，缩小alpha-beta边界
 				}
 			}
 		}
 	}
 
-	// 9. 若一个走法也没走，则说明被杀，返回杀棋分，否则返回best
+	//若一个走法也没走，则说明被杀，返回杀棋分，否则返回best
 	return best == -MATE_VALUE ? pos.RootDistance - MATE_VALUE : best;
 }
 
 // 查找置换表项
 int ProbeHash(int vl_Alpha, int vl_Beta, int Depth, int &mv) {
 	bool  bMate; // 杀棋标志
-				 //通过 [ dwKey % HASH_SIZE ] 得到具体走法
+				 //通过 [ key0 % HASH_SIZE ] 得到具体走法
 				 // 可以通过指针优化hsh
-	HashItem hsh = Search.HashTable[pos.zobr.dwKey & HASH_SIZE_end];
+	HashItem hsh = Search.HashTable[pos.zobr.key0 & HASH_SIZE_end];
 	//
-	if (hsh.Lock0 != pos.zobr.dwLock0 || hsh.Lock1 != pos.zobr.dwLock1) {		//如果检验码不同，则跳出
+	if (hsh.Lock0 != pos.zobr.key1 || hsh.Lock1 != pos.zobr.key2) {		//如果检验码不同，则跳出
 		mv = 0;
 		return MATE_VALUE_neg;
 	}
@@ -136,7 +136,7 @@ int ProbeHash(int vl_Alpha, int vl_Beta, int Depth, int &mv) {
 // 保存置换表项
 void RecordHash(int Flag, int vl, int Depth, int mv) {
 	// 可以通过指针优化hsh
-	HashItem hsh = Search.HashTable[pos.zobr.dwKey & HASH_SIZE_end];
+	HashItem hsh = Search.HashTable[pos.zobr.key0 & HASH_SIZE_end];
 	if (hsh.Depth > Depth) {
 		return;
 	}
@@ -157,7 +157,7 @@ void RecordHash(int Flag, int vl, int Depth, int mv) {
 		hsh.vl = vl;
 	}
 
-	Search.HashTable[pos.zobr.dwKey & HASH_SIZE_end] = { (BYTE)Depth,(BYTE)Flag,hsh.vl,(WORD)mv,pos.zobr.dwLock0,pos.zobr.dwLock1 };
+	Search.HashTable[pos.zobr.key0 & HASH_SIZE_end] = { (BYTE)Depth,(BYTE)Flag,hsh.vl,(WORD)mv,pos.zobr.key1,pos.zobr.key2 };
 };
 
 // 求MVV/LVA值

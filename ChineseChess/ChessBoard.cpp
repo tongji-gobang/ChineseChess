@@ -114,7 +114,7 @@ bool CurrentBoard::MakeMove(int move, bool change)
     int pieceCaptured;
     DWORD key;
 
-    key = zobr.dwKey;   // 记录当前局面的键值
+    key = zobr.key0;   // 记录当前局面的键值
     pieceCaptured = MovePiece(move);    // 记录被吃子
     if (Checked()) { // 被将军则撤销走子
         UndoMovePiece(move, pieceCaptured);
@@ -187,7 +187,7 @@ void CurrentBoard::ClearBoard()
 void CurrentBoard::InitAllMoves()
 {
     // 加入空走法
-    this->AllMoves[0].push(0, 0, Checked(), zobr.dwKey);
+    this->AllMoves[0].push(0, 0, Checked(), zobr.key0);
     // 走法数 + 1
     this->MoveNum = 1;
 }
@@ -228,7 +228,7 @@ bool CurrentBoard::Capture() const
 void CurrentBoard::UselessMove()
 {
     // 记录当前局面键值
-    DWORD key = this->zobr.dwKey;
+    DWORD key = this->zobr.key0;
     // 换走子方
     this->ChangeSide();
     // 加入历史走法
@@ -636,7 +636,7 @@ int CurrentBoard::IsRepetitive(int ReLoop)
     while (ptrMoves->thisMove != 0 && ptrMoves->pieceCaptured == 0) {
         if (SelfSide) {
             PerpetualCheck = PerpetualCheck && ptrMoves->Check;
-            if (ptrMoves->thisKey == zobr.dwKey) {   // 局面重复
+            if (ptrMoves->thisKey == zobr.key0) {   // 局面重复
                 --ReLoop;
                 if (!ReLoop)
                     return 1 + (PerpetualCheck ? 2 : 0) + (OppPerpetualCheck ? 4 : 0);

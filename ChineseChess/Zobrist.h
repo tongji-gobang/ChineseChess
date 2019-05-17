@@ -19,13 +19,13 @@ public:
 	int x, y;
 public:
 	RC4Struct();			// 用空密钥初始化密码流生成器
-	BYTE NextByte();		// 生成下一字节的流密码
-	DWORD NextLong();		// 生成下四字节的流密码
+	BYTE GenByte();			// 生成下一字节的流密码
+	DWORD Gen4Byte();		// 生成下四字节的流密码
 };
 
 class ZobristStruct {
 public:
-	DWORD dwKey, dwLock0, dwLock1;
+	DWORD key0, key1, key2;
 public:
 	friend class PositionStruct;
 	ZobristStruct();		// 构造函数，相当于InitZero
@@ -34,7 +34,7 @@ public:
 	void InitRC4(RC4Struct &rc4);// 用密码流填充Zobrist
 
 	ZobristStruct operator^(const ZobristStruct &zobr);// Zobrist结构的异或运算
-	ZobristStruct operator^=(const ZobristStruct &zobr);// 相当于原代码中的Xor
+	ZobristStruct operator^=(const ZobristStruct &zobr);
 #ifdef DEBUG
 	friend ostream& operator<< (ostream &out, ZobristStruct &zobr);
 #endif // DEBUG
@@ -45,7 +45,7 @@ public:
 	ZobristStruct Player;
 	ZobristStruct Table[14][256];
 public:
-	Zobrist();				// 相当于原代码中的InitZobrist
+	Zobrist();				//生成随机数表
 #ifdef DEBUG
 	void display();			// 测试用
 #endif // DEBUG

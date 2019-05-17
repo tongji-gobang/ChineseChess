@@ -41,13 +41,13 @@ int SearchBook() {
 	}
 	// 2. 搜索当前局面
 	isMirror = FALSE;				//从非镜像局面开始寻找
-	bkToSearch.dwLock = pos.zobr.dwLock1;
+	bkToSearch.dwLock = pos.zobr.key2;
 	bk = (BookItem *)bsearch(&bkToSearch, Search.BookTable, Search.BookSize, sizeof(BookItem), CompareBook);	//对开局库进行二分搜索
 	// 3. 如果没有找到，那么搜索当前局面的镜像局面
 	if (bk == NULL) {
 		isMirror = TRUE;
 		pos.Mirror(posMirror);
-		bkToSearch.dwLock = posMirror.zobr.dwLock1;
+		bkToSearch.dwLock = posMirror.zobr.key2;
 		bk = (BookItem *)bsearch(&bkToSearch, Search.BookTable, Search.BookSize, sizeof(BookItem), CompareBook);
 	}
 	// 4. 如果镜像局面也没找到，则立即返回
