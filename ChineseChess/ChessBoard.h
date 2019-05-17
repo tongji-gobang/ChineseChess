@@ -31,7 +31,7 @@ struct MoveInfo
     }
 };
 // 局面结构
-class PositionStruct
+class CurrentBoard
 {
 public:
     int player;				  // 轮到谁走 0 : 红方，1 : 黑方
@@ -48,7 +48,7 @@ public:
     void ChangeSide();   // 交换走子方
 
     void AddPiece(int position, int piece); // 给棋盘上添加棋子
-    void DelPiece(int position, int piece); // 删除棋盘上的棋子
+    void DeletePiece(int position, int piece); // 删除棋盘上的棋子
     int Evaluate() const;							 // 局面评价函数
     int MovePiece(int move);						 // 搬一步棋的棋子
     void UndoMovePiece(int move, int pieceCaptured); // 撤消搬一步棋的棋子
@@ -57,21 +57,21 @@ public:
     int GenerateMoves(int* moves, bool OnlyCapture = false) const;			 // 生成所有走法
     bool LegalMove(int move) const;					 // 判断走法是否合理
     bool Checked() const;							 // 判断是否被将军
-    bool IsMate();									 // 判断是否被杀
-    bool Captured() const;							 // 是否吃子
+    bool IsMating();									 // 判断是否被杀
+    bool Capture() const;							 // 是否吃子
 
-    void MoveNull();				  // 空着
-    void UndoMoveNull();			  // 撤销空着
+    void UselessMove();				  // 空着
+    void UndoUselessMove();			  // 撤销空着
     bool LastCheck();				  // 最后一步是否将军
     int DrawValue();				  // 平局分数
     int IsRepetitive(int ReLoop = 1); // 检测重复局面
     int RepeatValue(int ReNum);		  //重复局面的分数
-    bool NullOkay();				  // 是否可空着搜索
+    bool CanUselessMove();				  // 是否可空着搜索
 
-    void Mirror(PositionStruct& posMirror);
+    void Mirror(CurrentBoard& posMirror);
 };
 
-extern PositionStruct pos;
+extern CurrentBoard pos;
 
 // 获得格子的横坐标
 inline int Row(int posIndex)

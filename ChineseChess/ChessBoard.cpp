@@ -3,14 +3,14 @@
 #include "Search.h"
 #include <cstring>
 
-PositionStruct pos;
+CurrentBoard pos;
 
 /**
  * description: 初始化棋盘
  * parameter: void
  * return: void
  */
-void PositionStruct::Startup()
+void CurrentBoard::Startup()
 {
     int posIndex, piece;
     // 由于需要计算初始局面的zobrist键值，所以必须清空棋盘
@@ -34,7 +34,7 @@ void PositionStruct::Startup()
  * parameter: position - 位置， piece - 棋子
  * return: void
  */
-void PositionStruct::AddPiece(int position, int piece)
+void CurrentBoard::AddPiece(int position, int piece)
 {
     // 加入棋子
     this->Board[position] = piece;
@@ -53,7 +53,7 @@ void PositionStruct::AddPiece(int position, int piece)
  * parameter: pisition - 位置， piece - 棋子(计算子力价值)
  * return: void
  */
-void PositionStruct::DelPiece(int position, int piece)
+void CurrentBoard::DeletePiece(int position, int piece)
 {
     // 删除
     this->Board[position] = 0;
@@ -73,16 +73,16 @@ void PositionStruct::DelPiece(int position, int piece)
  * parameter: 走法信息
  * return: 被吃的棋子
  */
-int PositionStruct::MovePiece(int move)
+int CurrentBoard::MovePiece(int move)
 {
     int src, dst, piece, pieceCaptured;
     src = SrcPos(move); // 获得该走法的起点
     dst = DstPos(move); // 获得该走法的终点
     pieceCaptured = this->Board[dst];   // 获取终点的棋子(即被吃的子)
     if (pieceCaptured != 0)    // 如果有有棋子则吃掉(已检查过合理性，不会吃己方棋子)
-        this->DelPiece(dst, pieceCaptured); // 从棋盘上删除棋子
+        this->DeletePiece(dst, pieceCaptured); // 从棋盘上删除棋子
     piece = this->Board[src];   // 获取起点的棋子
-    this->DelPiece(src, piece); // 删除起点棋子
+    this->DeletePiece(src, piece); // 删除起点棋子
     this->AddPiece(dst, piece); // 将起点的棋子放到终点位置
     return pieceCaptured;
 }
@@ -92,13 +92,13 @@ int PositionStruct::MovePiece(int move)
  * parameter: move-走法，pieceCaptured-被吃的棋子
  * return: void
  */
-void PositionStruct::UndoMovePiece(int move, int pieceCaptured)
+void CurrentBoard::UndoMovePiece(int move, int pieceCaptured)
 {
     int src, dst, piece;
     src = SrcPos(move);
     dst = DstPos(move);
     piece = Board[dst];         // 获取终点的棋子
-    this->DelPiece(dst, piece); // 删除
+    this->DeletePiece(dst, piece); // 删除
     this->AddPiece(src, piece); // 将该棋子放到起点
     if (pieceCaptured != 0)
         AddPiece(dst, pieceCaptured);   // 若被吃子，重置终点棋子
@@ -109,7 +109,7 @@ void PositionStruct::UndoMovePiece(int move, int pieceCaptured)
  * parameter: move-走法，change-是否换到对方(默认为false)
  * return: 若被将军返回false，否则true
  */
-bool PositionStruct::MakeMove(int move, bool change)
+bool CurrentBoard::MakeMove(int move, bool change)
 {
     int pieceCaptured;
     DWORD key;
@@ -134,7 +134,7 @@ bool PositionStruct::MakeMove(int move, bool change)
  * parameter: void
  * return: void
  */
-void PositionStruct::UndoMakeMove()
+void CurrentBoard::UndoMakeMove()
 {
     // 走法数 - 1
     --this->MoveNum;
@@ -151,7 +151,7 @@ void PositionStruct::UndoMakeMove()
  * parameter: void
  * return: void
  */
-void PositionStruct::ChangeSide()
+void CurrentBoard::ChangeSide()
 {
     this->player = !this->player;
     // 每次交换时，局面键值异或当前玩家的局面键值
@@ -163,7 +163,7 @@ void PositionStruct::ChangeSide()
  * parameter: void
  * return: void
  */
-void PositionStruct::ClearBoard()
+void CurrentBoard::ClearBoard()
 {
     // 黑方先走
     this->player = 0;
@@ -184,7 +184,7 @@ void PositionStruct::ClearBoard()
  * parameter: void
  * return: void
  */
-void PositionStruct::InitAllMoves()
+void CurrentBoard::InitAllMoves()
 {
     // 加入空走法
     this->AllMoves[0].push(0, 0, Checked(), zobr.dwKey);
@@ -196,7 +196,7 @@ void PositionStruct::InitAllMoves()
  * parameter: void
  * return: 局面分数
  */
-int PositionStruct::Evaluate() const
+int CurrentBoard::Evaluate() const
 {
     // 取子力价值差 并加上先行的优势分值
     return (this->player == 0 ? valueRed - valueBlack : valueBlack - valueRed) + ADVANCED_VALUE;
@@ -206,7 +206,7 @@ int PositionStruct::Evaluate() const
  * parameter: void
  * return: true - 将军， false - 未将军
  */
-bool PositionStruct::LastCheck()
+bool CurrentBoard::LastCheck()
 {
     // this->MoveNum 指向下一个还未加入的位置，需 - 1
     return this->AllMoves[this->MoveNum - 1].Check;
@@ -216,7 +216,7 @@ bool PositionStruct::LastCheck()
  * parameter: void
  * return: void
  */
-bool PositionStruct::Captured() const
+bool CurrentBoard::Capture() const
 {
     return this->AllMoves[this->MoveNum - 1].pieceCaptured != 0;
 }
@@ -225,7 +225,7 @@ bool PositionStruct::Captured() const
  * parameter: void
  * return: void
  */
-void PositionStruct::MoveNull()
+void CurrentBoard::UselessMove()
 {
     // 记录当前局面键值
     DWORD key = this->zobr.dwKey;
@@ -240,7 +240,7 @@ void PositionStruct::MoveNull()
  * parameter: void
  * return: void
  */
-void PositionStruct::UndoMoveNull()
+void CurrentBoard::UndoUselessMove()
 {
     --this->RootDistance;
     --this->MoveNum;
@@ -252,7 +252,7 @@ void PositionStruct::UndoMoveNull()
  * parameter: void
  * return: true OR false
  */
-bool PositionStruct::NullOkay()
+bool CurrentBoard::CanUselessMove()
 {
     return (this->player ? valueBlack : valueRed) > NULL_MARGIN;
 }
@@ -261,7 +261,7 @@ bool PositionStruct::NullOkay()
  * parameter: void
  * return: 平局分值
  */
-int PositionStruct::DrawValue()
+int CurrentBoard::DrawValue()
 {
     // 红方先行(分值越大越好)，黑方越小越好
     // 若 this->RootDistance 为偶数, 返回最小
@@ -273,7 +273,7 @@ int PositionStruct::DrawValue()
  * parameter: moves - 存储生成的走法， OnlyCapture - 是否只生成吃子走法(默认为false)
  * return: 生成的走法数
  */
-int PositionStruct::GenerateMoves(int* moves, bool OnlyCapture) const
+int CurrentBoard::GenerateMoves(int* moves, bool OnlyCapture) const
 {
     int NumGenerate, src, dst;
     int SelfSide, OppSide, pieceSrc, pieceDst;
@@ -426,7 +426,7 @@ int PositionStruct::GenerateMoves(int* moves, bool OnlyCapture) const
  * parameter: mv - 走法
  * return: true OR false
  */
-bool PositionStruct::LegalMove(int mv) const
+bool CurrentBoard::LegalMove(int mv) const
 {
     int src, dst, pin;
     int SelfSide, pieceSrc, pieceDst, delta;
@@ -497,7 +497,7 @@ bool PositionStruct::LegalMove(int mv) const
  * parameter: void
  * return: bool
  */
-bool PositionStruct::Checked() const
+bool CurrentBoard::Checked() const
 {
     int src, dst;
     int SelfSide, OppSide, pieceDst;
@@ -572,7 +572,7 @@ bool PositionStruct::Checked() const
  * parameter: void
  * return: bool
  */
-bool PositionStruct::IsMate()
+bool CurrentBoard::IsMating()
 {
     int i, nGenMoveNum, pcCaptured;
     int moves[MAX_GEN_MOVES];
@@ -598,7 +598,7 @@ bool PositionStruct::IsMate()
  * parameter: ReNum --- IsRepetitive 的返回值，表示双方是否长将
  * return: 重复局面的分值
  */
-int PositionStruct::RepeatValue(int ReNum)
+int CurrentBoard::RepeatValue(int ReNum)
 {
     int value;
     if ((ReNum & 2) == 0)
@@ -620,7 +620,7 @@ int PositionStruct::RepeatValue(int ReNum)
  * parameter: ReLoop - 以几次局面重复表示最终局面重复信息
  * return: 双方长将信息
  */
-int PositionStruct::IsRepetitive(int ReLoop)
+int CurrentBoard::IsRepetitive(int ReLoop)
 {
     bool SelfSide, PerpetualCheck, OppPerpetualCheck;
     const MoveInfo* ptrMoves;
@@ -650,7 +650,12 @@ int PositionStruct::IsRepetitive(int ReLoop)
     return 0;
 }
 
-void PositionStruct::Mirror(PositionStruct & posMirror)
+/**
+ * description: 求当前局面的镜像
+ * parameter: posMirror - 存储镜像局面
+ * return: void
+ */
+void CurrentBoard::Mirror(CurrentBoard & posMirror)
 {
     // 求当前局面的镜像
     int posIndex, piece;
