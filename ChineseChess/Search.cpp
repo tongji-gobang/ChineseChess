@@ -466,12 +466,12 @@ int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
 	//  空着搜索, 先搜索“弃权”着法 
 	//  因为无论是谁，走一步总会使情况变好，那么不走的情况下还能截断（情况好），那么走了也大概率截断
 	//  故如果弃权着法高出边界，那么真正最好的着法也可能高出边界，就可以直接返回Beta而不要再去搜索了
-	if (!no_null_cut && !pos.LastCheck() && pos.NullOkay()) {
-		pos.MoveNull();
+	if (!no_null_cut && !pos.LastCheck() && pos.CanUselessMove()) {
+		pos.UselessMove();
 		// 参数这样写？ alpha = beta - 1; beta = beta, -1的作用和原理
 		// 是为了缩小搜索窗口 加大截断的概率，因为我们只想知道“有没有截断”，而不是截断“好不好”
 		vl = -WholeSearch(-beta, 1 - beta, depth - NULL_DEPTH - 1, NO_NULL);
-		pos.UndoMoveNull();
+		pos.UndoUselessMove();
 		if (vl >= beta) {
 			return vl;
 		}

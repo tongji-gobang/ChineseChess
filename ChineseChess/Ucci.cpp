@@ -279,7 +279,7 @@ void process_fen(CommandInfo &comm) {
 				int sq = ((9 - j + 3) << 4) + i + 3;
 				int cur_pc = pos.Board[sq];
 				if (0 != cur_pc) {
-					pos.DelPiece(sq, cur_pc);
+					pos.DeletePiece(sq, cur_pc);
 					//pos.AddPiece(sq, 0);
 				}
 				i++;
@@ -300,7 +300,7 @@ void process_fen(CommandInfo &comm) {
 			// 根据横纵坐标得到落子的地方
 			int cur_pc = pos.Board[sq];
 			if (k != cur_pc) {
-				pos.DelPiece(sq, cur_pc);
+				pos.DeletePiece(sq, cur_pc);
 				pos.AddPiece(sq, k);  // 需要再讨论
 			}
 			

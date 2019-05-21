@@ -150,7 +150,7 @@ static void ResponseMove(void) {
     DrawSquare(DstPos(Xqwl.mvLast), DRAW_SELECTED);
     // 检查重复局面
     vlRep = pos.IsRepetitive(3);
-    if (pos.IsMate()) {
+    if (pos.IsMating()) {
         // 如果分出胜负，那么播放胜负的声音，并且弹出不带声音的提示框
         PlayResWav(IDR_LOSS);
         MessageBoxMute("请再接再厉！");
@@ -171,8 +171,8 @@ static void ResponseMove(void) {
     }
     else {
         // 如果没有分出胜负，那么播放将军、吃子或一般走子的声音
-        PlayResWav(pos.LastCheck() ? IDR_CHECK2 : pos.Captured() ? IDR_CAPTURE2 : IDR_MOVE2);
-        if (pos.Captured()) {
+        PlayResWav(pos.LastCheck() ? IDR_CHECK2 : pos.Capture() ? IDR_CAPTURE2 : IDR_MOVE2);
+        if (pos.Capture()) {
             pos.InitAllMoves();
         }
     }
@@ -211,7 +211,7 @@ static void ClickSquare(int sq) {
                 Xqwl.sqSelected = 0;
                 // 检查重复局面
                 vlRep = pos.IsRepetitive(3);
-                if (pos.IsMate()) {
+                if (pos.IsMating()) {
                     // 如果分出胜负，那么播放胜负的声音，并且弹出不带声音的提示框
                     PlayResWav(IDR_WIN);
                     MessageBoxMute("祝贺你取得胜利！");
@@ -232,8 +232,8 @@ static void ClickSquare(int sq) {
                 }
                 else {
                     // 如果没有分出胜负，那么播放将军、吃子或一般走子的声音
-                    PlayResWav(pos.LastCheck() ? IDR_CHECK : pos.Captured() ? IDR_CAPTURE : IDR_MOVE);
-                    if (pos.Captured()) {
+                    PlayResWav(pos.LastCheck() ? IDR_CHECK : pos.Capture() ? IDR_CAPTURE : IDR_MOVE);
+                    if (pos.Capture()) {
                         pos.InitAllMoves();
                     }
                     ResponseMove(); // 轮到电脑走棋

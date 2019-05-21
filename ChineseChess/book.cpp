@@ -31,7 +31,7 @@ int SearchBook() {
 	int mvs[MAX_GEN_MOVES], vls[MAX_GEN_MOVES];
 	bool isMirror;
 	BookItem bkToSearch, *bk;
-	PositionStruct posMirror;
+	CurrentBoard posMirror;
 	// 搜索开局库的过程有以下几个步骤
 
 	// 1. 如果没有开局库，则立即返回
