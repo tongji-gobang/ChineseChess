@@ -99,7 +99,7 @@ void MessageBoxMute(LPCSTR lpszText) {
 	mbp.hwndOwner = Xqwl.hWnd;
 	mbp.hInstance = NULL;
 	mbp.lpszText = lpszText;
-	mbp.lpszCaption = "象棋小巫师";
+	mbp.lpszCaption = "象棋AI";
 	mbp.dwStyle = MB_USERICON;
     mbp.lpszIcon = MAKEINTRESOURCE(IDI_INFORMATION);
 	mbp.dwContextHelpId = 0;
@@ -303,13 +303,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 			ShellExecute(NULL, NULL, "http://www.xqbase.com/", NULL, NULL, SW_SHOWNORMAL);
 			break;
 		case IDM_HELP_ABOUT:
-			// 弹出带象棋小巫师图标的对话框
+			// 弹出对话框
 			MessageBeep(MB_ICONINFORMATION);
 			mbp.cbSize = sizeof(MSGBOXPARAMS);
 			mbp.hwndOwner = hWnd;
 			mbp.hInstance = Xqwl.hInst;
 			mbp.lpszText = cszAbout;
-			mbp.lpszCaption = "关于象棋小巫师";
+			mbp.lpszCaption = "关于";
 			mbp.dwStyle = MB_USERICON;
 			mbp.lpszIcon = MAKEINTRESOURCE(IDI_APPICON);
 			mbp.dwContextHelpId = 0;

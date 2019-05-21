@@ -21,11 +21,12 @@ struct UI{
 	BOOL bFlipped, bGameOver;                                // 是否翻转棋盘, 游戏是否结束
 };
 extern UI Xqwl;
-
-const LPCSTR cszAbout = "象棋小巫师 0.3\n象棋百科全书 荣誉出品\n\n"
-"(C) 2004-2008 www.xqbase.com\n本产品符合GNU通用公共许可协议\n\n"
-"欢迎登录 www.xqbase.com\n免费下载PC版 象棋巫师";
-
+const LPCSTR cszAbout = "人工智能原理作业\n"
+"组长：	刘鲲\n"
+"组员：	沈琪\n"
+"	张钇文\n"
+"	高鹏\n"
+"	杨君临\n";
 // 窗口和绘图属性
 const int WINDOW_STYLES = WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX;
 const int MASK_COLOR = RGB(0, 255, 0);

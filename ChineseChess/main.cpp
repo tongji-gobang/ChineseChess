@@ -114,12 +114,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	wce.hCursor = (HCURSOR)LoadImage(NULL, IDC_ARROW, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
 	wce.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
 	wce.lpszMenuName = MAKEINTRESOURCE(IDM_MAINMENU);
-	wce.lpszClassName = "XQWLIGHT";
+	wce.lpszClassName = "CHINESECHESS";
 	wce.hIconSm = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_APPICON), IMAGE_ICON, 16, 16, LR_SHARED);
 	RegisterClassEx(&wce);
 
 	// 打开窗口
-	Xqwl.hWnd = CreateWindow("XQWLIGHT", "象棋小巫师", WINDOW_STYLES,
+	Xqwl.hWnd = CreateWindow("CHINESECHESS", "象棋AI", WINDOW_STYLES,
 		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hInstance, NULL);
 	if (Xqwl.hWnd == NULL) {
 		return 0;
