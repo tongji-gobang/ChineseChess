@@ -3,10 +3,8 @@
 #include"ChessData.h"
 #include"Search.h"
 #include"Ucci.h"
-//#define DEBUG_UCCI
-//#define DEBUG
 
-
+#define DEBUG_UCCI
 #ifdef DEBUG_UCCI
 int main()
 {

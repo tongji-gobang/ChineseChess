@@ -1,5 +1,5 @@
 ﻿
-#define DEBUG
+
 //#define CPP3 1
 
 //#define CPP4 2
@@ -646,9 +646,7 @@ void TopSearch(clock_t time_limit) {
 		if (vl > WIN_VALUE || vl < -WIN_VALUE) {
 			break; // ! 杀棋都是 nDistance -    VALUE_MATE
 		}
-		clock_t this_time = clock() - this_start;
-
-		t_sum += this_time;
+		
 		//衰减判断
 		if (i < 10) {
 			decay_factor = 5;
@@ -662,18 +660,22 @@ void TopSearch(clock_t time_limit) {
 		else {
 			decay_factor = 2;
 		}
-
+		clock_t this_time = clock() - this_start;
+		t_sum += this_time;
 		// 退出搜索判断
 		// -10是为了以防万一
 		if (time_limit - 10 - t_sum < this_time * decay_factor) {
 #ifdef DEBUG
-			printf("dt: %d\n", time_limit - 10 - t_sum);
-			printf("t: %d\n", this_time);
+			printf("time remain: %d\n", time_limit - 10 - t_sum);
+			printf("last round t: %d\n", this_time);
 #endif // DEBUG
 			break;
 		}
 #ifdef DEBUG
-		printf("t: %d\n", this_time);
+		printf("this time: %d\n", this_time);
 #endif // DEBUG
 	}
+#ifdef DEBUG
+	printf("total time usage: %d\n", clock() - t);
+#endif // DEBUG
 }
