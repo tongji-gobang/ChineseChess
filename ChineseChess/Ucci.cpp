@@ -394,12 +394,12 @@ void process_fen(CommandInfo &comm) {
 
 	// »»·½
 	// ºìÎª0 pos.sdPlayer
-	//if ((pos.sdPlayer == 0) && (comm.nmv & 1) == 1) {
-	//	pos.sdPlayer = 1;
-	//}
-	//else if ((pos.sdPlayer == 1) && (comm.nmv & 1) == 1) {
-	//	pos.sdPlayer = 0;
-	//}
+	if ((pos.player == 0) && (comm.nmv & 1) == 1) {
+		pos.player = 1;
+	}
+	else if ((pos.player == 1) && (comm.nmv & 1) == 1) {
+		pos.player = 0;
+	}
 #ifdef DEBUG
 	debug_show_board();
 	printf("[%d]", pos.player);
