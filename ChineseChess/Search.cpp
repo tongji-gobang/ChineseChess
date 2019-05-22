@@ -11,6 +11,8 @@
 #include"RESOURCE.H"
 #include"ChessBoard.h"
 #include"sort.h"
+#include <algorithm>
+#include <limits>
 
 S Search;
 
@@ -18,6 +20,9 @@ clock_t start_time;
 clock_t time_limit;
 clock_t this_time;
 clock_t reserved_time = 20;
+
+bool Timeout = false;
+const auto TimeoutValue = (std::numeric_limits<int>::min)();
 
 // 设置最优move
 void SetBestMove(int mv, int depth) {
@@ -32,12 +37,15 @@ void SetBestMove(int mv, int depth) {
 
 // 静态搜索：克服水平线效应
 int QuiescSearch(int alpha, int beta) {
+
+    if (clock() - start_time + reserved_time >= time_limit) {
+        Timeout = true;
+        return TimeoutValue;
+    }
+
 	int i, movenum;
 	int value, best;
 	int mvs[MAX_GEN_MOVES];
-
-    if (clock() - start_time + reserved_time >= time_limit)
-        return pos.Evaluate();
 
 	//检查重复局面
 	value = pos.IsRepetitive();
@@ -54,7 +62,7 @@ int QuiescSearch(int alpha, int beta) {
 	if (pos.LastCheck()) {
 		//如果被将军，则生成全部走法
 		movenum = pos.GenerateMoves(mvs);
-		qsort(mvs, movenum, sizeof(int), CompareHistory);
+		sort(begin(mvs), begin(mvs) + movenum, CompareHistory());
 	}
 	else {
 
@@ -72,7 +80,7 @@ int QuiescSearch(int alpha, int beta) {
 
 		//如果局面评价没有截断，再考虑吃子走法
 		movenum = pos.GenerateMoves(mvs, GEN_CAPTURE);		//生成所有吃子走法
-		qsort(mvs, movenum, sizeof(int), CompareMvvLva);	//按MVVLVA排序吃子着法
+		sort(begin(mvs), begin(mvs) + movenum, CompareMvvLva());	//按MVVLVA排序吃子着法
 	}
 
 	//对每一种吃子走法进行递归
@@ -82,6 +90,9 @@ int QuiescSearch(int alpha, int beta) {
 
 			value = -QuiescSearch(-beta, -alpha);
 			pos.UndoMakeMove();
+
+            if (Timeout)
+                break;
 
 			//进行Alpha-Beta大小判断和截断
 			if (value > best) {			//找到最佳值
@@ -174,18 +185,14 @@ int MvvLva(int mv) {
 	return (cucMvvLva[pos.Board[DstPos(mv)]] << 3) - cucMvvLva[pos.Board[SrcPos(mv)]];
 }
 
-// qsort按MVV/LVA值排序的比较函数
-int CompareMvvLva(const void *p1, const void *p2) {
-	return MvvLva(*(int *)p2) - MvvLva(*(int *)p1);
-}
-
-// qsort历史表排序的比较函数
-int CompareHistory(const void *p1, const void *p2) {
-	return Search.nHistoryTable[*(int *)p2] - Search.nHistoryTable[*(int *)p1];
-}
-
 // 完整的alphabeta搜索
 int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
+
+    if (clock() - start_time + reserved_time >= time_limit) {
+        Timeout = true;
+        return TimeoutValue;
+    }
+
 	// 变量意义：
 
 	// 结点分值相关
@@ -201,9 +208,6 @@ int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
 
 	// 走法排序
 	SortMoves Sort;
-
-    if (clock() - start_time + reserved_time >= time_limit)
-        return pos.Evaluate();
 
 	// 到达水平线，静态搜索
 	if (depth <= 0) {
@@ -271,6 +275,10 @@ int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
 			}
 			pos.UndoMakeMove();
 
+            // 如果超时 返回值 vl 不可信 不能截断或更新
+            if (Timeout)
+                break;
+
 			// Alpha-Beta截断
 			if (vl > best_value) {    
 				best_value = vl;        
@@ -315,8 +323,10 @@ static int FirstSearch(int depth) {
 
 	best_value = -MATE_VALUE;	// 初始化值，可用于判断
 
-    if (clock() - start_time + reserved_time >= time_limit)
-        return best_value;
+    /*if (clock() - start_time + reserved_time >= time_limit) {
+        Timeout = true;
+        return TimeoutValue;
+    }*/
 
 	// 初始化走法表
 	Sort.Init(Search.mvResult);
@@ -337,6 +347,10 @@ static int FirstSearch(int depth) {
 				}
 			}
 			pos.UndoMakeMove();
+
+            if (Timeout)
+                break;
+
 			if (vl > best_value) {
 				best_value = vl;
 				Search.mvResult = mv;
@@ -360,6 +374,7 @@ void TopSearch(clock_t limit) {
 	int mvs[MAX_GEN_MOVES];
 
     time_limit = limit;
+    Timeout = false;
 
 	// 初始化
 	start_time = clock(); // 初始化定时器
@@ -405,7 +420,7 @@ void TopSearch(clock_t limit) {
 
 	clock_t t_init = clock() - start_time;
 	clock_t t_sum = t_init;
-	int decay_factor = 1;
+
 	// 迭代加深过程
 	for (i = 1; i <= LIMIT_DEPTH; i++) {
 		clock_t this_start = clock();
@@ -416,24 +431,11 @@ void TopSearch(clock_t limit) {
 			break; // ! 杀棋都是 nDistance -    VALUE_MATE
 		}
 		
-		//衰减判断
-		if (i < 10) {
-			decay_factor = 5;
-		}
-		else if (i >= 10 && i < 20) {
-			decay_factor = 4;
-		}
-		else if (i >= 20 && i < 30) {
-			decay_factor = 3;
-		}
-		else {
-			decay_factor = 2;
-		}
 		this_time = clock() - this_start;
 		t_sum += this_time;
 		// 退出搜索判断
 		// -10是为了以防万一
-		if (time_limit - 10 - t_sum < this_time * decay_factor) {
+		if (Timeout) {
 #ifdef DEBUG
 			printf("time remain: %d\n", time_limit - 10 - t_sum);
 			printf("last round t: %d\n", this_time);

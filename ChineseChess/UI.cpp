@@ -3,8 +3,9 @@
 #include"ChessData.h"
 #include"ChessBoard.h"
 #include"Search.h"
-
-
+#include<iostream>
+#include<fstream>
+using namespace std;
 UI Xqwl;
 
 // TransparentBlt 的替代函数，用来修正原函数在 Windows 98 下资源泄漏的问题
@@ -137,6 +138,7 @@ void DrawSquare(int sq, BOOL bSelected = FALSE) {
 static void ResponseMove(void) {
     int vlRep;
     // 电脑走一步棋
+	int t = clock();
     SetCursor((HCURSOR)LoadImage(NULL, IDC_WAIT, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED));
 	TopSearch(1000);
     SetCursor((HCURSOR)LoadImage(NULL, IDC_ARROW, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE | LR_SHARED));
@@ -175,6 +177,24 @@ static void ResponseMove(void) {
         if (pos.Capture()) {
             pos.InitAllMoves();
         }
+		int use_time= clock() - t;
+		//C:/Users/zhang/Desktop/ChineseChess-test2/x64/Debug/
+		//用绝对路径设置要写入的文件
+		ofstream OpenFile("C:/Users/zhang/Desktop/ChineseChess-test2/x64/Debug/data.txt",ios::app);
+
+		if (OpenFile.fail())
+
+		{
+
+			cout << "打开文件错误!" << endl;
+
+			exit(0);
+
+		}
+
+		OpenFile << use_time;
+
+		OpenFile.close();
     }
 }
 

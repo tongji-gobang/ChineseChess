@@ -56,11 +56,6 @@ struct S{
 extern S Search;
 // 其他常数
 
-
-							   
- // "qsort"按历史表排序的比较函数
-int CompareHistory(const void *lpmv1, const void *lpmv2);
-
 // 完整的Alpha-Beta搜索
 int WholeSearch(int alpha, int beta, int depth, bool no_null_cut = FALSE);
 
@@ -83,11 +78,20 @@ static BYTE cucMvvLva[24] = {
 // 求MVV/LVA值
 int MvvLva(int mv);
 
-// "qsort"按MVV/LVA值排序的比较函数
-int CompareMvvLva(const void *p1, const void *p2);
-
-// "qsort"按历史表排序的比较函数
-int CompareHistory(const void *p1, const void *p2);
+// "qsort"按MVV/LVA值排序的比较结构
+struct CompareMvvLva {
+    bool operator()(const int& a, const int& b)
+    {
+        return MvvLva(a) >= MvvLva(b);  // 从大到小排序
+    }
+};
+// "qsort"按历史表排序的比较结构
+struct CompareHistory {
+    bool operator()(const int& a, const int& b)
+    {
+        return Search.nHistoryTable[a] >= Search.nHistoryTable[b];
+    }
+};
 
 // 静态搜索
 int QuiescSearch(int alpha, int beta);
