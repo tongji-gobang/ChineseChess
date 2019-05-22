@@ -91,8 +91,10 @@ int QuiescSearch(int alpha, int beta) {
 			value = -QuiescSearch(-beta, -alpha);
 			pos.UndoMakeMove();
 
-            if (Timeout)
+            // 超时之后立即退出，只对返回值做判断
+            if (value == TimeoutValue) {
                 break;
+            }
 
 			//进行Alpha-Beta大小判断和截断
 			if (value > best) {			//找到最佳值
@@ -104,6 +106,10 @@ int QuiescSearch(int alpha, int beta) {
 					alpha = value;		//更新alpha，缩小alpha-beta边界
 				}
 			}
+
+            // 这里表示虽然已超时，但返回值仍可信
+            if (Timeout)
+                break;
 		}
 	}
 
@@ -275,9 +281,10 @@ int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
 			}
 			pos.UndoMakeMove();
 
-            // 如果超时 返回值 vl 不可信 不能截断或更新
-            if (Timeout)
+            // 如果超时 返回值 vl 不可信 不能更新
+            if (vl == TimeoutValue) {
                 break;
+            }
 
 			// Alpha-Beta截断
 			if (vl > best_value) {    
@@ -294,6 +301,9 @@ int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
 					alpha = vl;     
 				}
 			}
+            // 这里表示虽然已超时，但返回值仍可信
+            if (Timeout)
+                break;
 		}
 	}
 
@@ -348,8 +358,9 @@ static int FirstSearch(int depth) {
 			}
 			pos.UndoMakeMove();
 
-            if (Timeout)
+            if (Timeout && vl == TimeoutValue)
                 break;
+            // 若Timeout 为ture 但 vl != TimeoutValue 表示该返回值 vl 是合法的 必须更新
 
 			if (vl > best_value) {
 				best_value = vl;
@@ -359,6 +370,9 @@ static int FirstSearch(int depth) {
 					best_value += (rand() & RANDOM_MASK) - (rand() & RANDOM_MASK);
 				}
 			}
+            // 更新后便无需进行下一结点的搜索
+            if (Timeout)
+                break;
 		}
 	}
 
