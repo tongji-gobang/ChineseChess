@@ -14,6 +14,11 @@
 
 S Search;
 
+clock_t start_time;
+clock_t time_limit;
+clock_t this_time;
+clock_t reserved_time = 20;
+
 // 设置最优move
 void SetBestMove(int mv, int depth) {
 	int *p;
@@ -26,10 +31,13 @@ void SetBestMove(int mv, int depth) {
 }
 
 // 静态搜索：克服水平线效应
-int QuiescSearch(int alpha, int beta) {
+int QuiescSearch(int alpha, int beta, int depth = 0) {
 	int i, movenum;
 	int value, best;
 	int mvs[MAX_GEN_MOVES];
+
+    if (clock() - start_time + reserved_time >= time_limit)
+        return pos.Evaluate();
 
 	//检查重复局面
 	value = pos.IsRepetitive();
@@ -71,7 +79,8 @@ int QuiescSearch(int alpha, int beta) {
 	for (i = 0; i < movenum; ++i) {
 		//int PieceCaptured;
 		if (pos.MakeMove(mvs[i])) {
-			value = -QuiescSearch(-beta, -alpha);
+
+			value = -QuiescSearch(-beta, -alpha, depth + 1);
 			pos.UndoMakeMove();
 
 			//进行Alpha-Beta大小判断和截断
@@ -175,252 +184,6 @@ int CompareHistory(const void *p1, const void *p2) {
 	return Search.nHistoryTable[*(int *)p2] - Search.nHistoryTable[*(int *)p1];
 }
 
-#ifdef CPP3
-int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
-	int i, nGenMoves, pcCaptured;
-	int vl, best_value, mvBest;
-	int mvs[MAX_GEN_MOVES];
-	// 一个Alpha-Beta完全搜索分为以下几个阶段
-
-	// 1. 到达水平线，则返回局面评价值
-	if (depth == 0) {
-		return pos.Evaluate();
-	}
-
-	// 2. 初始化最佳值和最佳走法
-	best_value = -MATE_VALUE; // 这样可以知道，是否一个走法都没走过(杀棋)
-	mvBest = 0;           // 这样可以知道，是否搜索到了Beta走法或PV走法，以便保存到历史表
-
-						  // 3. 生成全部走法，并根据历史表排序
-	nGenMoves = pos.GenerateMoves(mvs);
-	qsort(mvs, nGenMoves, sizeof(int), CompareHistory);
-
-	// 4. 逐一走这些走法，并进行递归  //，深度优先遍历
-	for (i = 0; i < nGenMoves; i++) {
-		if (pos.MakeMove(mvs[i])) {
-			vl = -WholeSearch(-beta, -alpha, depth - 1);
-			pos.UndoMakeMove();
-
-			// 5. 进行Alpha-Beta大小判断和截断
-			if (vl > best_value) {    // 找到最佳值(但不能确定是Alpha、PV还是Beta走法)  
-
-
-				best_value = vl;        // "best_value"就是目前要返回的最佳值，可能超出Alpha-Beta边界
-				if (vl >= beta) { // 找到一个Beta走法
-					mvBest = mvs[i];  // Beta走法要保存到历史表
-					break;            // Beta截断
-				}
-				if (vl > alpha) { // 找到一个PV走法
-					mvBest = mvs[i];  // PV走法要保存到历史表
-					alpha = vl;     // 缩小Alpha-Beta边界
-				}
-			}
-		}
-	}
-
-	// 5. 所有走法都搜索完了，把最佳走法(不能是Alpha走法)保存到历史表，返回最佳值
-	if (best_value == -MATE_VALUE) {
-		// 如果是杀棋，就根据杀棋步数给出评价
-		return pos.RootDistance - MATE_VALUE;
-	}
-	if (mvBest != 0) {
-		// 如果不是Alpha走法，就将最佳走法保存到历史表
-		Search.nHistoryTable[mvBest] += depth * depth;
-		if (pos.RootDistance == 0) {
-			// 搜索根节点时，总是有一个最佳走法(因为全窗口搜索不会超出边界)，将这个走法保存下来
-			Search.mvResult = mvBest;
-		}
-	}
-	return best_value;
-}
-
-#elif CPP4
-int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
-	int i, nGenMoves;
-	int vl, best_value, mvBest;
-	int mvs[MAX_GEN_MOVES];
-	// 一个Alpha-Beta完全搜索分为以下几个阶段
-
-	if (pos.RootDistance > 0) {
-
-		// 1. 到达水平线，则调用静态搜索(注意：由于空步裁剪，深度可能小于零)  // ! 原因：空步裁剪函数中n.distence--
-		if (depth <= 0) {
-			return QuiescSearch(alpha, beta);
-		}
-
-		// 1-1. 检查重复局面(注意：不要在根节点检查，否则就没有走法了，// ! 故上方if（nDistance > 0）)
-		vl = pos.IsRepetitive();
-		if (vl != 0) {
-			return pos.RepeatValue(vl);
-		}
-
-		// 1-2. 到达极限深度就返回局面评价
-		if (pos.RootDistance == LIMIT_DEPTH) {
-			return pos.Evaluate();
-		}
-		//  有害的着子是非常罕见的(除了残局以外)。通常如果轮到你走，你一定能让局面更好些。
-		//  所有可能的着法都使局面变得更糟，
-		//  这样的局面称为“无等着”(Zugzwang)(德语，意思为强迫着子)，通常只发生在残局中。
-		//  因此，假设你搜索一个希望高出边界的结点(即Alpha-Beta搜索的返回值至少是Beta)，
-		//  空着搜索就是先搜索“弃权”着法【即“空着”(Null-Move)】，即使它通常不是最好的。
-		//  如果弃权着法高出边界，那么真正最好的着法也可能高出边界，你就可以直接返回Beta而不要再去搜索了。
-		//  要把搜索做得更快，弃权着法搜索的深度通常比常规着法浅。
-		//  你必须小心，这种启发会改变搜索结果，也可能使你忽略棋局中的一些重要的线路。
-		//  不要连续两次用空着(因为这样你的搜索会退化，结果只返回评价函数)，而且要小心，只能在不会出现无等着的情况下使用。
-
-		// 1-3. 尝试空步裁剪(根节点的Beta值是"MATE_VALUE"，所以不可能发生空步裁剪)
-		if (!no_null_cut && !pos.LastCheck() && pos.NullOkay()) {
-			pos.MoveNull();
-			vl = -WholeSearch(-beta, 1 - beta, depth - NULL_DEPTH - 1, NO_NULL);
-			pos.UndoMoveNull();
-			if (vl >= beta) {
-				return vl;
-			}
-		}
-	}
-
-	// 2. 初始化最佳值和最佳走法
-	best_value = -MATE_VALUE; // 这样可以知道，是否一个走法都没走过(杀棋)
-	mvBest = 0;           // 这样可以知道，是否搜索到了Beta走法或PV走法，以便保存到历史表
-
-						  // 3. 生成全部走法，并根据历史表排序
-	nGenMoves = pos.GenerateMoves(mvs);
-	qsort(mvs, nGenMoves, sizeof(int), CompareHistory);
-
-	// 4. 逐一走这些走法，并进行递归
-	for (i = 0; i < nGenMoves; i++) {
-		if (pos.MakeMove(mvs[i])) {
-			// 将军延伸 pos.InCheck() ? depth : depth - 1   // ? why？？？？？？？？？？？？
-			vl = -WholeSearch(-beta, -alpha, pos.LastCheck() ? depth : depth - 1);
-			pos.UndoMakeMove();
-
-			// 5. 进行Alpha-Beta大小判断和截断
-			if (vl > best_value) {    // 找到最佳值(但不能确定是Alpha、PV还是Beta走法)
-
-								  // ! 上因：best_value初始值为-MATE_VALUE，不一定在ab窗口里，故如下：“可能超出Alpha-Beta边界”
-
-				best_value = vl;        // "best_value"就是目前要返回的最佳值，
-				if (vl >= beta) { // 找到一个Beta走法
-					mvBest = mvs[i];  // Beta走法要保存到历史表  保存动作在下面
-					break;            // Beta截断
-				}
-				if (vl > alpha) { // 找到一个PV走法
-					mvBest = mvs[i];  // PV走法要保存到历史表   保存动作在下面
-					alpha = vl;     // 缩小Alpha-Beta边界
-				}
-			}
-		}
-	}
-
-	// 5. 所有走法都搜索完了，把最佳走法(不能是Alpha走法)保存到历史表，返回最佳值   //是不是就是PV走法？
-	if (best_value == -MATE_VALUE) {
-		// 如果是杀棋，就根据杀棋步数给出评价
-		return pos.RootDistance - MATE_VALUE;
-	}
-	if (mvBest != 0) {
-		// 如果不是Alpha走法，就将最佳走法保存到历史表
-		Search.nHistoryTable[mvBest] += depth * depth;
-		if (pos.RootDistance == 0) {
-			// 搜索根节点时，总是有一个最佳走法(因为全窗口搜索不会超出边界正无穷和负无穷)，将这个走法保存下来 why
-			Search.mvResult = mvBest;
-		}
-	}
-	return best_value;
-}
-#elif CPP5
-int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
-	int hash_type, vl, best_value;
-	int mv, mvBest, mvHash;
-	SortMoves Sort;
-	// 一个Alpha-Beta完全搜索分为以下几个阶段
-
-	if (pos.RootDistance > 0) {
-		// 1. 到达水平线，则调用静态搜索(注意：由于空步裁剪，深度可能小于零)
-		if (depth <= 0) {
-			return QuiescSearch(alpha, beta);
-		}
-
-		// 1-1. 检查重复局面(注意：不要在根节点检查，否则就没有走法了)
-		vl = pos.IsRepetitive();
-		if (vl != 0) {
-			return pos.RepeatValue(vl);
-		}
-
-		// 1-2. 到达极限深度就返回局面评价
-		if (pos.RootDistance == LIMIT_DEPTH) {
-			return pos.Evaluate();
-		}
-
-		// 1-3. 尝试置换表裁剪，并得到置换表走法
-		vl = ProbeHash(alpha, beta, depth, mvHash);
-		if (vl > -MATE_VALUE) {
-			return vl;
-		}
-
-		// 1-4. 尝试空步裁剪(根节点的Beta值是"MATE_VALUE"，所以不可能发生空步裁剪)
-		if (!no_null_cut && !pos.LastCheck() && pos.NullOkay()) {
-			pos.MoveNull();
-			vl = -WholeSearch(-beta, 1 - beta, depth - NULL_DEPTH - 1, NO_NULL);
-			pos.UndoMoveNull();
-			if (vl >= beta) {
-				return vl;
-			}
-		}
-	}
-	else {
-		mvHash = 0;
-	}
-
-	// 2. 初始化最佳值和最佳走法
-	hash_type = HASH_ALPHA;
-	best_value = -MATE_VALUE; // 这样可以知道，是否一个走法都没走过(杀棋)
-	mvBest = 0;           // 这样可以知道，是否搜索到了Beta走法或PV走法，以便保存到历史表
-
-						  // 3. 初始化走法排序结构
-	Sort.Init(mvHash);
-
-	// 4. 逐一走这些走法，并进行递归
-	while ((mv = Sort.GetNextMv()) != 0) {
-		if (pos.MakeMove(mv)) {
-			// 将军延伸
-			vl = -WholeSearch(-beta, -alpha, pos.LastCheck() ? depth : depth - 1);
-			pos.UndoMakeMove();
-
-			// 5. 进行Alpha-Beta大小判断和截断
-			if (vl > best_value) {    // 找到最佳值(但不能确定是Alpha、PV还是Beta走法)
-				best_value = vl;        // "best_value"就是目前要返回的最佳值，可能超出Alpha-Beta边界
-				if (vl >= beta) { // 找到一个Beta走法
-					hash_type = HASH_BETA;  // ! 先设定好 是什么类型的置换表
-					mvBest = mv;      // Beta走法要保存到历史表
-					break;            // Beta截断
-				}
-				if (vl > alpha) { // 找到一个PV走法
-					hash_type = HASH_PV;    // ! 先设定好 是什么类型的置换表 下面记录
-					mvBest = mv;      // PV走法要保存到历史表
-					alpha = vl;     // 缩小Alpha-Beta边界
-				}
-			}
-		}
-	}
-
-	// 5. 所有走法都搜索完了，把最佳走法(不能是Alpha走法)保存到历史表，返回最佳值
-	if (best_value == -MATE_VALUE) {
-		// 如果是杀棋，就根据杀棋步数给出评价
-		return pos.RootDistance - MATE_VALUE;
-	}
-	// 记录到置换表
-	RecordHash(hash_type, best_value, depth, mvBest);
-	if (mvBest != 0) {
-		// 如果不是Alpha走法，就将最佳走法保存到历史表
-		SetBestMove(mvBest, depth);
-		if (pos.RootDistance == 0) {
-			// 搜索根节点时，总是有一个最佳走法(因为全窗口搜索不会超出边界)，将这个走法保存下来
-			Search.mvResult = mvBest;
-		}
-	}
-	return best_value;
-}
-#else CPP6
 // 完整的alphabeta搜索
 int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
 	// 变量意义：
@@ -439,10 +202,12 @@ int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
 	// 走法排序
 	SortMoves Sort;
 
+    if (clock() - start_time + reserved_time >= time_limit)
+        return pos.Evaluate();
 
 	// 到达水平线，静态搜索
 	if (depth <= 0) {
-		return QuiescSearch(alpha, beta);
+		return QuiescSearch(alpha, beta, 0);
 	}
 
 	// 检查重复局面 目的是防止长将
@@ -540,7 +305,6 @@ int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
 	}
 	return best_value;
 }
-#endif
 
 // 首步Alpha-Beta搜索
 // 为什么要区分第一次（根节点）和其它结点？因为很多优化和启发对第一次搜索无效并且有反作用
@@ -550,6 +314,9 @@ static int FirstSearch(int depth) {
 	SortMoves Sort;
 
 	best_value = -MATE_VALUE;	// 初始化值，可用于判断
+
+    if (clock() - start_time + reserved_time >= time_limit)
+        return best_value;
 
 	// 初始化走法表
 	Sort.Init(Search.mvResult);
@@ -588,12 +355,14 @@ static int FirstSearch(int depth) {
 }
 
 // 搜索的顶层调用
-void TopSearch(clock_t time_limit) {
-	int i, t, vl, n_mvs;
+void TopSearch(clock_t limit) {
+	int i, vl, n_mvs;
 	int mvs[MAX_GEN_MOVES];
 
+    time_limit = limit;
+
 	// 初始化
-	t = clock(); // 初始化定时器
+	start_time = clock(); // 初始化定时器
 	memset(Search.nHistoryTable, 0, 65536 * sizeof(int)); // 清空历史表
 	memset(Search.mvKillers, 0, LIMIT_DEPTH * 2 * sizeof(int)); // 清空杀手走法表
 	memset(Search.HashTable, 0, HASH_SIZE * sizeof(HashItem)); // 清空置换表
@@ -634,7 +403,7 @@ void TopSearch(clock_t time_limit) {
 		return;
 	}
 
-	clock_t t_init = clock() - t;
+	clock_t t_init = clock() - start_time;
 	clock_t t_sum = t_init;
 	int decay_factor = 1;
 	// 迭代加深过程
@@ -660,7 +429,7 @@ void TopSearch(clock_t time_limit) {
 		else {
 			decay_factor = 2;
 		}
-		clock_t this_time = clock() - this_start;
+		this_time = clock() - this_start;
 		t_sum += this_time;
 		// 退出搜索判断
 		// -10是为了以防万一
@@ -676,6 +445,6 @@ void TopSearch(clock_t time_limit) {
 #endif // DEBUG
 	}
 #ifdef DEBUG
-	printf("total time usage: %d\n", clock() - t);
+	printf("total time usage: %d\n", clock() - start_time);
 #endif // DEBUG
 }
