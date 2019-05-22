@@ -31,7 +31,7 @@ void SetBestMove(int mv, int depth) {
 }
 
 // 静态搜索：克服水平线效应
-int QuiescSearch(int alpha, int beta, int depth = 0) {
+int QuiescSearch(int alpha, int beta) {
 	int i, movenum;
 	int value, best;
 	int mvs[MAX_GEN_MOVES];
@@ -80,7 +80,7 @@ int QuiescSearch(int alpha, int beta, int depth = 0) {
 		//int PieceCaptured;
 		if (pos.MakeMove(mvs[i])) {
 
-			value = -QuiescSearch(-beta, -alpha, depth + 1);
+			value = -QuiescSearch(-beta, -alpha);
 			pos.UndoMakeMove();
 
 			//进行Alpha-Beta大小判断和截断
@@ -207,7 +207,7 @@ int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
 
 	// 到达水平线，静态搜索
 	if (depth <= 0) {
-		return QuiescSearch(alpha, beta, 0);
+		return QuiescSearch(alpha, beta);
 	}
 
 	// 检查重复局面 目的是防止长将
