@@ -116,12 +116,15 @@ bool CurrentBoard::MakeMove(int move, bool change)
 
     key = zobr.key0;   // 记录当前局面的键值
     pieceCaptured = MovePiece(move);    // 记录被吃子
-    if (Checked()) { // 被将军则撤销走子
-        UndoMovePiece(move, pieceCaptured);
-        return false;
-    }
-    if (change)
-        this->ChangeSide();
+
+	if (change) {
+		if (Checked()) { // 被将军则撤销走子
+			UndoMovePiece(move, pieceCaptured);
+			return false;
+		}
+		this->ChangeSide();
+	}
+        
 
     // 记录到历史走法中, 含义为(当前局面要走的走法 执行走法后将被吃掉的子 此时对面是否被将军 未执行该走法前的局面键值)
     this->AllMoves[this->MoveNum++].push(move, pieceCaptured, Checked(), key);

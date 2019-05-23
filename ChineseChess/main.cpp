@@ -63,7 +63,11 @@ int main()
 						printf("nobestmove\n");
 						fflush(stdout);
 					}
+#ifdef DEBUG
+
 					debug_show_board();
+#endif // DEBUG
+
 					break;
 				default:
 					break;

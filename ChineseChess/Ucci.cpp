@@ -365,7 +365,16 @@ void process_fen(CommandInfo &comm) {
 		comm.nmv = int(strlen(p) + 1) / 5; // "moves"后面的每个着法都是1个空格和4个字符
 #ifdef DEBUG
 		printf("%d\n", comm.nmv);
+
 #endif // DEBUG
+		// 换方
+		// 红为0 pos.sdPlayer
+		if ((pos.player == 0) && (comm.nmv & 1) == 1) {
+			pos.player = 1;
+		}
+		else if ((pos.player == 1) && (comm.nmv & 1) == 1) {
+			pos.player = 0;
+		}
 		for (i = 0; i < comm.nmv; i++) {
 			mv = 0;
 			//printf("%c%c%c%c ", p[0], p[1], p[2], p[3]);
@@ -392,14 +401,7 @@ void process_fen(CommandInfo &comm) {
 	}
 	
 
-	// 换方
-	// 红为0 pos.sdPlayer
-	if ((pos.player == 0) && (comm.nmv & 1) == 1) {
-		pos.player = 1;
-	}
-	else if ((pos.player == 1) && (comm.nmv & 1) == 1) {
-		pos.player = 0;
-	}
+	
 #ifdef DEBUG
 	debug_show_board();
 	printf("[%d]", pos.player);
