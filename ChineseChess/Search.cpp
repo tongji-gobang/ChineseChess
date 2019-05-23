@@ -113,8 +113,17 @@ int QuiescSearch(int alpha, int beta) {
 		}
 	}
 
-	//若一个走法也没走，则说明被杀，返回杀棋分，否则返回best
-	return best == -MATE_VALUE ? pos.RootDistance - MATE_VALUE : best;
+	//若一个走法也没走
+	if (best == -MATE_VALUE)
+		if (Timeout)
+			//若超时，返回不可信标志
+			return TimeoutValue;
+		else
+			//若不超时，说明被杀，返回杀棋分
+			return pos.RootDistance - MATE_VALUE;
+	else
+		return best;
+//	return (best == -MATE_VALUE) ? pos.RootDistance - MATE_VALUE : best;
 }
 
 // 查找置换表项
@@ -307,9 +316,13 @@ int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
 		}
 	}
 
-	// 如果是杀棋，就根据杀棋步数给出评价
+	// 如果一步也没走而且超时，返回不可信标志
+	// 如果一步也没走而且不超时，为杀棋，根据杀棋步数给出评价
 	if (best_value == -MATE_VALUE) {
-		return pos.RootDistance - MATE_VALUE;
+		if (Timeout)
+			return TimeoutValue;
+		else
+			return pos.RootDistance - MATE_VALUE;
 	}
 
 	// 把最佳走法保存，返回最佳值
