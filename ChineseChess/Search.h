@@ -82,14 +82,14 @@ int MvvLva(int mv);
 struct CompareMvvLva {
     bool operator()(const int& a, const int& b)
     {
-        return MvvLva(a) >= MvvLva(b);  // 从大到小排序
+        return MvvLva(b) < MvvLva(a); // 从大到小排序
     }
 };
 // "qsort"按历史表排序的比较结构
 struct CompareHistory {
     bool operator()(const int& a, const int& b)
     {
-        return Search.nHistoryTable[a] >= Search.nHistoryTable[b];
+        return Search.nHistoryTable[b] < Search.nHistoryTable[a];
     }
 };
 
