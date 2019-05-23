@@ -62,7 +62,7 @@ int QuiescSearch(int alpha, int beta) {
 	if (pos.LastCheck()) {
 		//如果被将军，则生成全部走法
 		movenum = pos.GenerateMoves(mvs);
-		sort(begin(mvs), begin(mvs) + movenum, CompareHistory());
+		std::sort(std::begin(mvs), std::begin(mvs) + movenum, CompareHistory());
 	}
 	else {
 
@@ -80,7 +80,7 @@ int QuiescSearch(int alpha, int beta) {
 
 		//如果局面评价没有截断，再考虑吃子走法
 		movenum = pos.GenerateMoves(mvs, GEN_CAPTURE);		//生成所有吃子走法
-		sort(begin(mvs), begin(mvs) + movenum, CompareMvvLva());	//按MVVLVA排序吃子着法
+        std::sort(std::begin(mvs), std::begin(mvs) + movenum, CompareMvvLva());	//按MVVLVA排序吃子着法
 	}
 
 	//对每一种吃子走法进行递归
