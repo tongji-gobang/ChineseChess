@@ -1,0 +1,4 @@
+#include <winver.h>
+
+
+BOOK_DATA    RCDATA DISCARDABLE "BOOK.DAT"

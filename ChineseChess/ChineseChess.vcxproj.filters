@@ -21,9 +21,6 @@
     <ClCompile Include="Search.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="UI.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -41,18 +38,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="XQWLIGHT.RC">
-      <Filter>资源文件</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="RESOURCE.H">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="ChessBoard.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="UI.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Search.h">
@@ -73,5 +59,10 @@
     <ClInclude Include="book.h">
       <Filter>头文件</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="OPEN_BOOK.RC">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

@@ -3,18 +3,23 @@
 #include "Search.h"
 #include "ChessBoard.h"
 #include "UI.h"
+#include <stdlib.h>
+#include <time.h>
+#include <windows.h>
+#pragma comment(lib, "winmm")
 
-
-
+HINSTANCE hInst; // 句柄全局
 // 装入开局库
 void LoadBook() {
 	HRSRC hrsrc;
-	hrsrc = FindResource(Xqwl.hInst, "BOOK_DATA", RT_RCDATA);					//资源加载！！？无法确定非windows环境下是否可用
-	Search.BookSize = SizeofResource(Xqwl.hInst, hrsrc) / sizeof(BookItem);
+	
+	// 修改句柄，原来是结构体，现在不需要了
+	hrsrc = FindResource(hInst, "BOOK_DATA", RT_RCDATA);					//资源加载！！？无法确定非windows环境下是否可用
+	Search.BookSize = SizeofResource(hInst, hrsrc) / sizeof(BookItem);
 	if (Search.BookSize > BOOK_SIZE) {
 		Search.BookSize = BOOK_SIZE;
 	}
-	memcpy(Search.BookTable, LockResource(LoadResource(Xqwl.hInst, hrsrc)),
+	memcpy(Search.BookTable, LockResource(LoadResource(hInst, hrsrc)),
 		Search.BookSize * sizeof(BookItem));
 }
 

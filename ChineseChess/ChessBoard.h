@@ -1,7 +1,6 @@
 #pragma once
 //#define DEBUG  // 全局debug开关
 
-#include "RESOURCE.H"
 #include "Zobrist.h"
 #include "search.h"
 #include "ChessData.h"

@@ -357,7 +357,7 @@ void process_fen(CommandInfo &comm) {
 		printf("%d\n", comm.nmv);
 
 #endif // DEBUG
-		// 换方
+		// 换方 必须在这里换方！！！！！
 		// 红为0 pos.sdPlayer
 		if ((pos.player == 0) && (comm.nmv & 1) == 1) {
 			pos.player = 1;

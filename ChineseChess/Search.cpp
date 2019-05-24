@@ -1,5 +1,4 @@
 ﻿#include"Search.h"
-#include"RESOURCE.H"
 #include"ChessBoard.h"
 #include"sort.h"
 #include <algorithm>
@@ -10,7 +9,7 @@ S Search;
 clock_t start_time;
 clock_t time_limit;
 clock_t this_time;
-clock_t reserved_time = 20;
+clock_t reserved_time = 100;
 
 bool Timeout = false;
 const auto TimeoutValue = (std::numeric_limits<int>::min)();
@@ -458,10 +457,9 @@ void TopSearch(clock_t limit) {
 		this_time = clock() - this_start;
 		t_sum += this_time;
 		// 退出搜索判断
-		// -10是为了以防万一
 		if (Timeout) {
 #ifdef DEBUG
-			printf("time remain: %d\n", time_limit - 10 - t_sum);
+			printf("time remain: %d\n", time_limit - t_sum);
 			printf("last round t: %d\n", this_time);
 #endif // DEBUG
 			break;
