@@ -2,7 +2,7 @@
 
 #define MAX_BUFF	1024	// 一次读入一行有多少个
 #define MAX_MOVE_NUM  64	// 跟在fen串后的moves有几个
-//#define DEBUG
+
 // UCCI 协议
 #include <time.h>
 #include <stdio.h>

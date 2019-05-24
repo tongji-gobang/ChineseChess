@@ -1,8 +1,6 @@
 ﻿#include"Search.h"
 #include"ChessBoard.h"
 #include"sort.h"
-#include <algorithm>
-#include <limits>
 
 S Search;
 
