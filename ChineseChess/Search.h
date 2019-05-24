@@ -1,10 +1,9 @@
-
 #pragma once
-//#inlcude "BOOKitem"
 #include <Windows.h>
 #include <time.h>
 #include "book.h"
 
+// 常量参考了象棋小巫师的源代码
 const int MAX_GEN_MOVES = 128; // 最大的生成走法数
 const int MAX_MOVES = 256;     // 最大的历史走法数
 const int LIMIT_DEPTH = 16;    // 最大的搜索深度
@@ -85,6 +84,7 @@ struct CompareMvvLva {
         return MvvLva(b) < MvvLva(a); // 从大到小排序
     }
 };
+
 // "qsort"按历史表排序的比较结构
 struct CompareHistory {
     bool operator()(const int& a, const int& b)

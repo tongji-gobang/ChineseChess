@@ -26,20 +26,10 @@ char * read_line()
 	return s;
 }
 
-//extern PositionStruct pos;
-// 初始化ucci 废弃
-inline void init_ucci()
-{
-//	UcciInAtty = _isatty(0);  // 还不知道做什么用
-							  //UcciInAtty = 1;
-}
-
-
 // 接收第一条指令
 CommandEnum first_line()
 {
 	char *p;
-	init_ucci();
 	p = read_line();
 
 	//while (p) {

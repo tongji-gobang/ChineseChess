@@ -34,8 +34,6 @@ int main()
 					fflush(stdout);
 					break;
 				case CommandPosition:
-					//ThisSearch.Position.LoadFen(Command.Position.FenStr);
-					//ThisSearch.Position.StartMove = ThisSearch.Position.MoveNum;
 					//printf("enter process fen\n");
 					process_fen(comm); // 将move提取出来 存到Command的movelist里
 
@@ -45,7 +43,6 @@ int main()
 									   //}
 					break;
 				case CommandGoTime:
-					//ThisSearch.Search(Command.Search.DepthTime.Depth, 2/* Set by User */);
 					TopSearch(comm.go_time);
 					mv_rst = Search.mvResult;
 #ifdef DEBUG
@@ -53,7 +50,6 @@ int main()
 					printf("[!!%x!!]", mv_rst);
 #endif // DEBUG
 					if (mv_rst != 0) {
-
 						long rst_str = best_move2str(mv_rst);
 						printf("bestmove %.4s\n", (char *)&rst_str);
 						fflush(stdout);
@@ -64,10 +60,8 @@ int main()
 						fflush(stdout);
 					}
 #ifdef DEBUG
-
 					debug_show_board();
 #endif // DEBUG
-
 					break;
 				default:
 					break;

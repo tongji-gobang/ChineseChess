@@ -1,13 +1,4 @@
-﻿
-
-//#define CPP3 1
-
-//#define CPP4 2
-
-//#define CPP5  3
-#define CPP6 4
-
-#include"Search.h"
+﻿#include"Search.h"
 #include"RESOURCE.H"
 #include"ChessBoard.h"
 #include"sort.h"
@@ -159,9 +150,15 @@ int ProbeHash(int vl_Alpha, int vl_Beta, int Depth, int &mv) {
 	if (hsh.Depth >= Depth || bMate) {			//满足深度限制或者为杀棋（如果是杀棋，那么不需要满足深度条件）
 		switch (hsh.Flag)
 		{
-			case HASH_BETA:		return (hsh.vl >= vl_Beta ? hsh.vl : MATE_VALUE_neg); break;
-			case HASH_ALPHA:	return (hsh.vl <= vl_Alpha ? hsh.vl : MATE_VALUE_neg); break;
-			default:			return hsh.vl; break;
+			case HASH_BETA:		
+				return (hsh.vl >= vl_Beta ? hsh.vl : MATE_VALUE_neg); 
+				break;
+			case HASH_ALPHA:	
+				return (hsh.vl <= vl_Alpha ? hsh.vl : MATE_VALUE_neg); 
+				break;
+			default:			
+				return hsh.vl; 
+				break;
 		}
 	}
 
