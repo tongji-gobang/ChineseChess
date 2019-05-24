@@ -1,10 +1,12 @@
 #pragma once
-//#define DEBUG  // 全局debug开关
+#define DEBUG  // 全局debug开关
 
 #include "RESOURCE.H"
 #include "Zobrist.h"
 #include "search.h"
 #include "ChessData.h"
+#include <algorithm>
+#include <limits>
 
 
 #ifdef __cplusplus

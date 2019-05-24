@@ -1,11 +1,12 @@
 #include"sort.h"
 
-
 //历史表比较函数
-int compare(const void* a, const void*b) {
-	return Search.nHistoryTable[*(int *)b] - Search.nHistoryTable[*(int *)a];
-}
-
+struct compare {
+    bool operator()(const int& a, const int& b) const
+    {
+        return Search.nHistoryTable[b] < Search.nHistoryTable[a];
+    }
+};
 
 void SortMoves::Init(int hash_mv_) {
 	this->hash_mv = hash_mv_;		//初始化哈希走法
@@ -61,7 +62,7 @@ int SortMoves::GetNextMv() {
 		which_phrase = PHASE_REST;											//将状态更新为逐一获取走法状态
 
 		this->n_mvs = pos.GenerateMoves(mvs);						//生成此局面所有走法
-		qsort(mvs, n_mvs, sizeof(int), compare);					//对这些走法进行历史表排序
+		std::sort(std::begin(mvs), std::begin(mvs) + n_mvs, compare());					//对这些走法进行历史表排序
 		this->idx = 0;												//将采用走法的下标置0
 	}
 
