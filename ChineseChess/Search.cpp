@@ -28,8 +28,9 @@ int QuiescSearch(int alpha, int beta) {
 
     if (clock() - start_time + reserved_time >= time_limit) {
         Timeout = true;
-        return TimeoutValue;
-    }
+        // return TimeoutValue;
+		return pos.Evaluate();
+	}
 
 	int i, movenum;
 	int value, best;
@@ -103,10 +104,10 @@ int QuiescSearch(int alpha, int beta) {
 
 	//若一个走法也没走
 	if (best == -MATE_VALUE)
-		if (Timeout)
-			//若超时，返回不可信标志
-			return TimeoutValue;
-		else
+		// if (Timeout)
+		// 	//若超时，返回不可信标志
+		// 	return TimeoutValue;
+		// else
 			//若不超时，说明被杀，返回杀棋分
 			return pos.RootDistance - MATE_VALUE;
 	else
@@ -199,8 +200,9 @@ int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
 
     if (clock() - start_time + reserved_time >= time_limit) {
         Timeout = true;
-        return TimeoutValue;
-    }
+        // return TimeoutValue;
+		return pos.Evaluate();
+	}
 
 	// 变量意义：
 
@@ -313,9 +315,9 @@ int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
 	// 如果一步也没走而且超时，返回不可信标志
 	// 如果一步也没走而且不超时，为杀棋，根据杀棋步数给出评价
 	if (best_value == -MATE_VALUE) {
-		if (Timeout)
-			return TimeoutValue;
-		else
+		// if (Timeout)
+		// 	return TimeoutValue;
+		// else
 			return pos.RootDistance - MATE_VALUE;
 	}
 
