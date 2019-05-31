@@ -80,7 +80,7 @@ int QuiescSearch(int alpha, int beta) {
 			pos.UndoMakeMove();
 
             // 超时之后立即退出，只对返回值做判断
-            if (value == TimeoutValue) {
+            if (value == (-TimeoutValue)) {
                 break;
             }
 
@@ -285,7 +285,7 @@ int WholeSearch(int alpha, int beta, int depth, bool no_null_cut) {
 			pos.UndoMakeMove();
 
             // 如果超时 返回值 vl 不可信 不能更新
-            if (vl == TimeoutValue) {
+            if (vl == (-TimeoutValue)) {
                 break;
             }
 
@@ -365,7 +365,7 @@ static int FirstSearch(int depth) {
 			}
 			pos.UndoMakeMove();
 
-            if (Timeout && vl == TimeoutValue)
+            if (Timeout && vl == (-TimeoutValue))
                 break;
             // 若Timeout 为ture 但 vl != TimeoutValue 表示该返回值 vl 是合法的 必须更新
 
